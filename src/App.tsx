@@ -1,9 +1,9 @@
-import type { Component, createSignal } from 'solid-js';
+import type { Component } from 'solid-js';
 import logo from './logo.svg';
 import styles from './App.module.css';
 import CryptoJS from 'crypto-js'
 
-const baseURL = "http://localhost:3000"
+const baseURL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 const authURL = "https://auth-qa.finnomena.com"
 const authClientID = "bacon"
 const callbackURL = baseURL
