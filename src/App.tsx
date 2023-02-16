@@ -6,9 +6,9 @@ import Dashboard from './components/Dashboard';
 
 const params = new URLSearchParams(window.location.search)
 if (params.has('code')) {
-  useExchangeToken(params.get('code') || "")
-} else if (params.has('error')) {
-  alert(params.get('error'))
+  await useExchangeToken(params.get('code') || "")
+} else if (params.has('error_description')) {
+  alert(params.get('error_description'))
 }
 
 const isLogin = await useIsLogin()
