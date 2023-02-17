@@ -28,7 +28,7 @@ export default () => {
                     You are connected with FINNOMENA
                 </div>
                 <div class='text-sm'>
-                    ID: {payload.sub}
+                    Partner User ID: {payload.sub}
                 </div>
                 <div class='text-sm my-1'>
                     <p >
