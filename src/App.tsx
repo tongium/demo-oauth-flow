@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import { Component, Show } from 'solid-js';
 import styles from './App.module.css';
 import { useExchangeToken, useIsLogin } from './hooks/auth';
 import Welcome from './components/Welcome';
@@ -15,13 +15,16 @@ const isLogin = await useIsLogin()
 
 const App: Component = () => {
   return (
-    <div class={styles.App}>
-      {isLogin ? (
-        <Dashboard />
-      ) : (
-        <Welcome />
-      )}
-    </div >
+    <main class={styles.App}>
+      <div class='flex flex-col items-center justify-center pt-16'>
+        <Show
+          when={isLogin}
+          fallback={Welcome}
+        >
+          <Dashboard />
+        </Show>
+      </div>
+    </main >
   );
 };
 

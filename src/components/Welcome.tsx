@@ -4,7 +4,7 @@ import { useLogin } from '../hooks/auth'
 
 export default () => {
     return (
-        <header class={styles.header}>
+        <div>
             <img src={logo} class={styles.logo} alt="logo" />
             <p>
                 Welcome to Bacon
@@ -14,6 +14,6 @@ export default () => {
             >
                 Connect to FINNOMENA
             </button>
-        </header>
+        </div>
     )
 }

@@ -31,6 +31,14 @@ const randomString = (length: number) => {
     return result
 }
 
+const convertMapToFormData = (data: Map<string, string>): string => {
+    let body = ''
+    for (let [key, value] of data) {
+        body = `${body}&${key}=${value}`
+    }
+    return body.substring(1)
+}
+
 export const useIDToken = (): string | null => {
     return get("auth.id_token")
 }
@@ -61,16 +69,16 @@ export const useExchangeToken = async (code: string) => {
     try {
         const challenge = get("auth.challenge")
 
-        const data = []
-        data.push('code=' + code)
-        data.push('client_id=' + authClientID)
-        data.push('code_verifier=' + challenge)
-        data.push('redirect_uri=' + callbackURL)
-        data.push('grant_type=' + 'authorization_code')
+        const data = new Map<string, string>()
+        data.set('code', code)
+        data.set('client_id', authClientID)
+        data.set('code_verifier', challenge || '')
+        data.set('redirect_uri', callbackURL)
+        data.set('grant_type', 'authorization_code')
 
         const resp = await fetch(tokenEndpoint, {
             method: 'POST',
-            body: data.join('&'),
+            body: convertMapToFormData(data),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
             },
@@ -85,6 +93,35 @@ export const useExchangeToken = async (code: string) => {
         console.error(err)
     } finally {
         location.href = baseURL
+    }
+}
+
+export const useRefreshToken = async () => {
+    try {
+        const data = new Map<string, string>()
+        data.set('client_id', authClientID)
+        data.set('refresh_token', get("auth.refresh_token") || '')
+        data.set('grant_type', 'refresh_token')
+
+        const resp = await fetch(tokenEndpoint, {
+            method: 'POST',
+            body: convertMapToFormData(data),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            },
+        })
+
+        const payload = await resp.json()
+        if (resp.status < 400) {
+            save("auth.access_token", payload.access_token)
+            save("auth.id_token", payload.id_token)
+            save("auth.refresh_token", payload.refresh_token)
+            save("auth.token_type", payload.token_type)
+        } else {
+            throw new Error(payload.error_description || 'can not refresh token')
+        }
+    } catch (err) {
+        alert(err)
     }
 }
 
