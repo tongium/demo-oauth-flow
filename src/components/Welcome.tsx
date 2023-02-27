@@ -5,7 +5,6 @@ import { useLogin } from '../hooks/auth'
 export default () => {
     return (
         <div>
-            <img src={logo} class={styles.logo} alt="logo" />
             <h1>
                 Welcome to Bacon
             </h1>
