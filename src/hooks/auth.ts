@@ -54,15 +54,23 @@ export const useLogout = () => {
 }
 
 export const useLogin = () => {
-    const scopes = "openid offline"
-
     const challenge = randomString(43)
+    const codeChallenge = CryptoJS.SHA256(challenge).toString(CryptoJS.enc.Base64url)
     const state = randomString(9)
     save("auth.challenge", challenge)
     save("auth.state", state)
 
-    const codeChallenge = CryptoJS.SHA256(challenge).toString(CryptoJS.enc.Base64url)
-    location.href = `${authEndpoint}?client_id=${authClientID}&redirect_uri=${encodeURIComponent(callbackURL)}&state=${state}&response_type=code&scope=${encodeURIComponent(scopes)}&code_challenge=${codeChallenge}&code_challenge_method=S256`
+    const url = new URL(authEndpoint)
+    url.searchParams.append("client_id", authClientID)
+    url.searchParams.append("redirect_uri", callbackURL)
+    url.searchParams.append("state", state)
+    url.searchParams.append("response_type", "code")
+    url.searchParams.append("scope", "openid offline")
+    url.searchParams.append("code_challenge", codeChallenge)
+    url.searchParams.append("code_challenge_method", "S256")
+
+
+    location.href = url.toString()
 }
 
 export const useExchangeToken = async (code: string) => {
