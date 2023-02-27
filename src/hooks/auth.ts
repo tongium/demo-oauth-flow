@@ -69,7 +69,6 @@ export const useLogin = () => {
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
-
     location.href = url.toString()
 }
 
