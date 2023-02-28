@@ -21,7 +21,7 @@ const copy = () => {
 
 export default () => {
     return (
-        <div>
+        <div class='p-10'>
             <div class='text-md'>
                 You are connected with <span class="font-bold">FINNOMENA</span>
             </div>
