@@ -43,6 +43,10 @@ export const useIDToken = (): string | null => {
     return get("auth.id_token")
 }
 
+export const useAccessToken = (): string | null => {
+    return get("auth.access_token")
+}
+
 export const useLogout = () => {
     remove("auth.access_token")
     remove("auth.id_token")
