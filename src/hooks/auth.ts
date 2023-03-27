@@ -65,7 +65,7 @@ export const useLogin = () => {
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
-    url.searchParams.append("scope", "openid offline account")
+    url.searchParams.append("scope", "openid offline customer:account")
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
