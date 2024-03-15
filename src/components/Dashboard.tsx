@@ -25,7 +25,7 @@ export default () => {
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    Partner User ID: {payload.sub}
+                    External User ID: {payload.sub}
                 </div>
                 <div class='text-sm my-4'>
                     <p>
