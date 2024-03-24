@@ -1,6 +1,5 @@
 import jwt_decode from "jwt-decode"
 import { useAccessToken, useIDToken, useLogout, useRefreshToken } from '../hooks/auth'
-import faCopy from './copy-solid.svg'
 
 let payload = {
     sub: ""
@@ -29,15 +28,11 @@ export default () => {
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    External User ID: <span class="font-bold">{payload.sub}</span>
+                    External User ID: <span class="font-bold bg-green-400">{payload.sub}</span>
                 </div>
                 <div class='text-sm my-4'>
-                    <p>
-                        Access Token: <input class='text-black w-[24rem] px-1 truncate' type="text" value={token || ""} id="token" disabled></input>
-                        <button class='bg-yellow-300 font-bold hover:bg-yellow-300 text-black px-1' onClick={copy}>
-                            copy
-                        </button>
-                    </p>
+                    Access Token:
+                    <div class='text-black w-[24rem] px-1 bg-gray-400 break-words cursor-pointer' id="token" onClick={copy}>{token}</div>
                 </div>
             </div>
             <div class="flex flex-row gap-4 justify-center pt-4">
