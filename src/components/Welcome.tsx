@@ -8,14 +8,18 @@ export default () => {
             <h1>
                 Welcome to Bacon
             </h1>
-            <p>
-                This website is built for demonstrating OAuth flow.
-            </p>
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={useLogin}
-            >
-                Connect to FINNOMENA
-            </button>
+            <section>
+                <p>
+                    This website is built for demonstrating OAuth flow.
+                </p>
+            </section>
+            <section class="my-4">
+                <button class="bg-yellow-300 hover:bg-yellow-500 text-black font-bold py-2 px-4 m-2"
+                    onClick={useLogin}
+                >
+                    Login with Finnomena
+                </button>
+            </section>
         </div>
     )
 }

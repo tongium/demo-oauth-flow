@@ -1,13 +1,17 @@
 import jwt_decode from "jwt-decode"
 import { useAccessToken, useIDToken, useLogout, useRefreshToken } from '../hooks/auth'
+import faCopy from './copy-solid.svg'
 
 let payload = {
     sub: ""
 }
 
 try {
-    payload = jwt_decode(useIDToken() || '')
-    console.info(payload)
+    const token = useIDToken()
+    if (token) {
+        payload = jwt_decode(token)
+        console.info(payload)
+    }
 } catch (err) {
     console.error(err)
 }
@@ -20,26 +24,25 @@ const copy = () => {
 export default () => {
     return (
         <div class='p-10'>
-            <div class='text-md'>
-                You are connected with <span class="font-bold">FINNOMENA</span>
+            <div class='text-md mb-12'>
+                You are connected with <span class="font-bold">Finnomena</span>
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    External User ID: {payload.sub}
+                    External User ID: <span class="font-bold">{payload.sub}</span>
                 </div>
                 <div class='text-sm my-4'>
                     <p>
-                        Access Token: <input class='text-black w-[24rem] px-1 truncate' type="text" value={token || ""} id="token"></input> <button class='bg-blue-500 hover:bg-blue-700 text-white rounded px-1' onClick={copy}>copy</button>
+                        Access Token: <input class='text-black w-[24rem] px-1 truncate' type="text" value={token || ""} id="token" disabled></input>
+                        <button class='bg-yellow-300 font-bold hover:bg-yellow-300 text-black px-1' onClick={copy}>
+                            <img src="/assets/copy-solid.svg" alt="copy" />
+                        </button>
                     </p>
                 </div>
             </div>
-            <div class="flex flex-row gap-4">
-                <div class="mt-4">
-                    <button class="bg-blue-500 text-sm hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" onClick={useLogout}>Disconect</button>
-                </div>
-                <div class="mt-4">
-                    <button class="bg-blue-500 text-sm hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" onClick={useRefreshToken}>Refresh Token</button>
-                </div>
+            <div class="flex flex-row gap-4 justify-center pt-4">
+                <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useLogout}>Logout</button>
+                <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useRefreshToken}>Refresh Token</button>
             </div>
         </div>
     )
