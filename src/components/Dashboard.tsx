@@ -35,14 +35,13 @@ export default () => {
                     <p>
                         Access Token: <input class='text-black w-[24rem] px-1 truncate' type="text" value={token || ""} id="token" disabled></input>
                         <button class='bg-yellow-300 font-bold hover:bg-yellow-300 text-black px-1' onClick={copy}>
-                            <img src="/assets/copy-solid.svg" alt="copy" />
+                            copy
                         </button>
                     </p>
                 </div>
             </div>
             <div class="flex flex-row gap-4 justify-center pt-4">
                 <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useLogout}>Logout</button>
-                <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useRefreshToken}>Refresh Token</button>
             </div>
         </div>
     )
