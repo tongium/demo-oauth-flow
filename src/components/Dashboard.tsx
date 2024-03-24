@@ -28,7 +28,7 @@ export default () => {
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    External User ID: <span class="font-bold bg-green-400">{payload.sub}</span>
+                    External User ID: <span class="font-bold bg-green-400 p-2 text-black">{payload.sub}</span>
                 </div>
                 <div class='text-sm my-4'>
                     Access Token:
