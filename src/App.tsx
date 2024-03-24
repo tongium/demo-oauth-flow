@@ -19,7 +19,7 @@ const App: Component = () => {
       <div class='flex flex-col items-center justify-center pt-16'>
         <Show
           when={isLogin}
-          fallback={Welcome}
+          fallback={<Welcome />}
         >
           <Dashboard />
         </Show>
