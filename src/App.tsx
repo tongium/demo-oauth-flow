@@ -17,9 +17,9 @@ const App: Component = () => {
   return (
     <div class={styles.App}>
       <nav class='w-1/1 text-right p-1 text-sm'>
-        <a href="https://github.com/tongium/demo-oauth-flow" target="_blank">Github</a>
+        <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-yellow-300' target="_blank">Github</a>
       </nav>
-      <main class='flex flex-col items-center justify-center pt-8'>
+      <main class='py-2'>
         <Show
           when={isLogin}
           fallback={<Welcome />}

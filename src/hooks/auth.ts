@@ -154,7 +154,7 @@ export const useGetUserinfo = async(): Promise<Response | undefined> =>{
 
             return resp
         } catch (err) {
-            alert(err)
+            console.error(err)
         }
     }
 }

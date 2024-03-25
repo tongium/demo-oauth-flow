@@ -15,7 +15,7 @@ export default () => {
                 <button class="bg-yellow-300 hover:bg-yellow-500 text-black font-bold py-2 px-4 m-2"
                     onClick={useLogin}
                 >
-                    Login with Finnomena.
+                    Continue with Finnomena.
                 </button>
             </section>
         </div>

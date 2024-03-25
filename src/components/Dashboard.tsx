@@ -56,15 +56,15 @@ const refresh = async () => {
 
 export default () => {
     return (
-        <div class='p-6'>
+        <div class='p-2 max-w-[720px] mx-auto'>
             <Show when={copied()}>
-                <div class="fixed w-4 top-4 left-1/2 translate-x-1/2 text-center">
+                <div class="fixed w-full left-0 top-4 text-center">
                     <span class="text-green-300">copied</span>
                 </div>
             </Show>
 
-            <div class='text-md mb-12'>
-                You are connected with <span class="font-bold">Finnomena.</span>
+            <div class='text-md mb-8'>
+                You are connected with <span class="font-bold text-lg">Finnomena.</span>
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
