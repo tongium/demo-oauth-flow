@@ -140,7 +140,7 @@ export const useRefreshToken = async () => {
     }
 }
 
-export const useIsLogin = async (): Promise<boolean> => {
+export const useGetUserinfo = async(): Promise<Response | undefined> =>{
     const accessToken = get("auth.access_token")
     if (accessToken) {
         try {
@@ -152,11 +152,18 @@ export const useIsLogin = async (): Promise<boolean> => {
                 },
             })
 
-            return resp.status < 400
+            return resp
         } catch (err) {
             alert(err)
         }
     }
+}
 
+export const useIsLogin = async (): Promise<boolean> => {
+    const userinfo = await useGetUserinfo()
+    if (userinfo) {
+        return true
+    }
+    
     return false
 }

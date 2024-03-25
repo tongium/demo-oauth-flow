@@ -1,10 +1,18 @@
 import jwt_decode from "jwt-decode"
-import { useAccessToken, useIDToken, useLogout, useRefreshToken, useReadRefreshToken } from '../hooks/auth'
-import { createSignal, Show } from 'solid-js'
+import { useAccessToken, useIDToken, useLogout, useRefreshToken, useReadRefreshToken, useGetUserinfo } from '../hooks/auth'
+import { createSignal, Show, Accessor } from 'solid-js'
 
 const [copied, setCopied] = createSignal(false)
 const [accessToken, setAccessToken] = createSignal(useAccessToken())
 const [refreshToken, setRefreshToken] = createSignal(useReadRefreshToken())
+const [userinfo, setUserinfo] = createSignal("{}")
+
+const updateUserinfo = async () => {
+    const resp = await useGetUserinfo()
+    if (resp) {
+        setUserinfo(JSON.stringify(await resp.json(), null, 2))
+    }
+}
 
 let payload: any = {
     sub: ""
@@ -23,8 +31,11 @@ try {
     console.error(err)
 }
 
-const copy = (value: string | null) => {
+await updateUserinfo()
+
+const copy = (accessor: Accessor<any>) => {
     return () => {
+        const value = accessor()
         if (value) {
             navigator.clipboard.writeText(value)
             setCopied(true)
@@ -38,6 +49,7 @@ const copy = (value: string | null) => {
 
 const refresh = async () => {
     await useRefreshToken()
+    await updateUserinfo()
     setAccessToken(useAccessToken())
     setRefreshToken(useReadRefreshToken())
 }
@@ -56,15 +68,19 @@ export default () => {
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    External User ID: <span class="font-bold bg-green-400 p-1 text-black cursor-pointer" onClick={copy(payload.sub)}>{payload.sub}</span>
+                    External User ID: <span class="font-bold bg-green-400 p-1 text-black text-lg cursor-pointer" onClick={copy(payload.sub)}>{payload.sub}</span>
                 </div>
                 <div class='text-sm my-4'>
                     Access Token:
-                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(accessToken())}>{accessToken()}</div>
+                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(accessToken)}>{accessToken()}</div>
                 </div>
                 <div class='text-sm my-4'>
                     Refresh Token:
-                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(refreshToken())}>{refreshToken()}</div>
+                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(refreshToken)}>{refreshToken()}</div>
+                </div>
+                <div class='text-sm my-4'>
+                    Userinfo:
+                    <textarea class='text-black px-1 h-full min-h-[240px] resize-none w-full bg-gray-400'>{userinfo()}</textarea>
                 </div>
             </div>
             <div class="flex flex-row gap-4 justify-center pt-4">

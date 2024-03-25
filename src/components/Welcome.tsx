@@ -1,5 +1,3 @@
-import styles from '../App.module.css'
-import logo from '../logo.svg';
 import { useLogin } from '../hooks/auth'
 
 export default () => {
