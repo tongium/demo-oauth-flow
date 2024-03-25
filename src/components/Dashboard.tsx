@@ -64,7 +64,7 @@ export default () => {
             </Show>
 
             <div class='text-md mb-12'>
-                You are connected with <span class="font-bold">Finnomena</span>
+                You are connected with <span class="font-bold">Finnomena.</span>
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>

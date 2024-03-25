@@ -15,16 +15,19 @@ const isLogin = await useIsLogin()
 
 const App: Component = () => {
   return (
-    <main class={styles.App}>
-      <div class='flex flex-col items-center justify-center pt-16'>
+    <div class={styles.App}>
+      <nav class='w-1/1 text-right p-1 text-sm'>
+        <a href="https://github.com/tongium/glowing-meme" target="_blank">Github</a>
+      </nav>
+      <main class='flex flex-col items-center justify-center pt-8'>
         <Show
           when={isLogin}
           fallback={<Welcome />}
         >
           <Dashboard />
         </Show>
-      </div>
-    </main >
+      </main>
+    </div >
   );
 };
 
