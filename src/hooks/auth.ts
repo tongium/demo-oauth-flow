@@ -58,7 +58,7 @@ export const useLogout = () => {
     remove("auth.token_type")
     remove("auth.challenge")
     remove("auth.state")
-    location.href = baseURL
+    location.href = `${authURL}/logout?client_id=${authClientID}&redirect_uri=${encodeURIComponent(baseURL)}`
 }
 
 export const useLogin = () => {
@@ -73,7 +73,7 @@ export const useLogin = () => {
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
-    url.searchParams.append("scope", "openid offline customer:account")
+    url.searchParams.append("scope", "openid offline")
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
@@ -99,7 +99,10 @@ export const useExchangeToken = async (code: string) => {
             },
         })
 
+
+
         const payload = await resp.json()
+        console.log(payload)
         save("auth.access_token", payload.access_token)
         save("auth.id_token", payload.id_token)
         save("auth.refresh_token", payload.refresh_token)
@@ -140,7 +143,7 @@ export const useRefreshToken = async () => {
     }
 }
 
-export const useGetUserinfo = async(): Promise<Response | undefined> =>{
+export const useGetUserinfo = async (): Promise<Response | undefined> => {
     const accessToken = get("auth.access_token")
     if (accessToken) {
         try {
@@ -164,6 +167,6 @@ export const useIsLogin = async (): Promise<boolean> => {
     if (userinfo) {
         return true
     }
-    
+
     return false
 }
