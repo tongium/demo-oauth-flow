@@ -68,15 +68,15 @@ export default () => {
             </div>
             <div class="text-left">
                 <div class='text-sm my-2'>
-                    External User ID: <span class="font-bold bg-green-400 p-1 text-black text-lg cursor-pointer" onClick={copy(payload.sub)}>{payload.sub}</span>
+                    External User ID: <span data-testid="suject" class="font-bold bg-green-400 p-1 text-black text-lg cursor-pointer" onClick={copy(payload.sub)}>{payload.sub}</span>
                 </div>
                 <div class='text-sm my-4'>
                     Access Token:
-                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(accessToken)}>{accessToken()}</div>
+                    <div data-testid="access-token" class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(accessToken)}>{accessToken()}</div>
                 </div>
                 <div class='text-sm my-4'>
                     Refresh Token:
-                    <div class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(refreshToken)}>{refreshToken()}</div>
+                    <div data-testid="refresh-token" class='text-black w-1/1 px-1 bg-gray-400 break-words cursor-pointer' onClick={copy(refreshToken)}>{refreshToken()}</div>
                 </div>
                 <div class='text-sm my-4'>
                     Userinfo:
