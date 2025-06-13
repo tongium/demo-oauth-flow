@@ -80,12 +80,12 @@ export default () => {
                 </div>
                 <div class='text-sm my-4'>
                     Userinfo:
-                    <textarea class='text-black px-1 h-full min-h-[240px] resize-none w-full bg-gray-400'>{userinfo()}</textarea>
+                    <textarea data-testid="user-info" class='text-black px-1 h-full min-h-[240px] resize-none w-full bg-gray-400'>{userinfo()}</textarea>
                 </div>
             </div>
             <div class="flex flex-row gap-4 justify-center pt-4">
-                <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={refresh}>Refresh</button>
-                <button class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useLogout}>Logout</button>
+                <button id="refresh-btn" class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={refresh}>Refresh</button>
+                <button id="logout-btn" class="bg-yellow-300 text-sm hover:bg-yellow-500 text-black font-bold py-1 px-2 w-32" onClick={useLogout}>Logout</button>
             </div>
         </div>
     )
