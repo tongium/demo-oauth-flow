@@ -16,10 +16,7 @@ const isLogin = await useIsLogin()
 const App: Component = () => {
   return (
     <div class={styles.App}>
-      <nav class='w-1/1 text-right p-1 text-sm'>
-        <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-yellow-300' target="_blank">Github</a>
-      </nav>
-      <main class='py-2'>
+      <main class='min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center p-2'>
         <Show
           when={isLogin}
           fallback={<Welcome />}
@@ -27,6 +24,9 @@ const App: Component = () => {
           <Dashboard />
         </Show>
       </main>
+      <footer>
+        <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-yellow-300' target="_blank">Github</a>
+      </footer>
     </div >
   );
 };

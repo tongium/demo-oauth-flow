@@ -1,13 +1,14 @@
 import CryptoJS from 'crypto-js'
 
 const baseURL = import.meta.env.VITE_BASE_URL
-const authURL = import.meta.env.VITE_AUTH_URL
-const authClientID = import.meta.env.VITE_AUTH_CLIENT_ID
-const callbackURL = baseURL
+export const callbackURL = baseURL
 
-const authEndpoint = `${authURL}/oauth2/auth`
-const tokenEndpoint = `${authURL}/oauth2/token`
-const userinfoEndpoint = `${authURL}/userinfo`
+const defaultAuthClientID = import.meta.env.VITE_AUTH_CLIENT_ID
+const defaultAuthServer = import.meta.env.VITE_AUTH_URL
+
+export const authPath = "/oauth2/auth"
+export const tokenPath = "/oauth2/token"
+export const userInfoPath = "/userinfo"
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)
@@ -19,6 +20,34 @@ const get = (key: string): string | null => {
 
 const remove = (key: string) => {
     localStorage.removeItem(key)
+}
+
+export const setAuthServer = (server: string) => {
+    return save("auth.server", server)
+}
+
+export const getAuthServer = (): string => {
+    return get("auth.server") || defaultAuthServer
+}
+
+export const setAuthClientID = (clientId: string) => {
+    return save("auth.client_id", clientId)
+}
+
+export const getAuthClientID = (): string => {
+    return get("auth.client_id") || defaultAuthClientID
+}
+
+const getAuthUrl = (): string => {
+    return getAuthServer() + authPath
+}
+
+const getTokenUrl = (): string => {
+    return getAuthServer() + tokenPath
+}
+
+const getUserInfoUrl = (): string => {
+    return getAuthServer() + userInfoPath
 }
 
 const randomString = (length: number) => {
@@ -58,7 +87,7 @@ export const useLogout = () => {
     remove("auth.token_type")
     remove("auth.challenge")
     remove("auth.state")
-    location.href = `${authURL}/logout?client_id=${authClientID}&redirect_uri=${encodeURIComponent(baseURL)}`
+    location.href = `${getAuthServer()}/logout?client_id=${getAuthClientID()}&redirect_uri=${encodeURIComponent(baseURL)}`
 }
 
 export const useLogin = () => {
@@ -68,8 +97,8 @@ export const useLogin = () => {
     save("auth.challenge", challenge)
     save("auth.state", state)
 
-    const url = new URL(authEndpoint)
-    url.searchParams.append("client_id", authClientID)
+    const url = new URL(getAuthUrl())
+    url.searchParams.append("client_id", getAuthClientID())
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
@@ -86,12 +115,12 @@ export const useExchangeToken = async (code: string) => {
 
         const data = new Map<string, string>()
         data.set('code', code)
-        data.set('client_id', authClientID)
+        data.set('client_id', getAuthClientID())
         data.set('code_verifier', challenge || '')
         data.set('redirect_uri', callbackURL)
         data.set('grant_type', 'authorization_code')
 
-        const resp = await fetch(tokenEndpoint, {
+        const resp = await fetch(getTokenUrl(), {
             method: 'POST',
             body: convertMapToFormData(data),
             headers: {
@@ -99,10 +128,9 @@ export const useExchangeToken = async (code: string) => {
             },
         })
 
-
-
         const payload = await resp.json()
-        console.log(payload)
+        console.debug(payload)
+
         save("auth.access_token", payload.access_token)
         save("auth.id_token", payload.id_token)
         save("auth.refresh_token", payload.refresh_token)
@@ -117,11 +145,11 @@ export const useExchangeToken = async (code: string) => {
 export const useRefreshToken = async () => {
     try {
         const data = new Map<string, string>()
-        data.set('client_id', authClientID)
+        data.set('client_id', getAuthClientID())
         data.set('refresh_token', get("auth.refresh_token") || '')
         data.set('grant_type', 'refresh_token')
 
-        const resp = await fetch(tokenEndpoint, {
+        const resp = await fetch(getTokenUrl(), {
             method: 'POST',
             body: convertMapToFormData(data),
             headers: {
@@ -148,7 +176,7 @@ export const useGetUserinfo = async (): Promise<Response | undefined> => {
     if (accessToken) {
         try {
             const tokenType = localStorage.getItem("auth.token_type")
-            const resp = await fetch(userinfoEndpoint, {
+            const resp = await fetch(getUserInfoUrl(), {
                 method: 'GET',
                 headers: {
                     'Authorization': `${tokenType} ${accessToken}`,
