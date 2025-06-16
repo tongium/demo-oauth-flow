@@ -1,7 +1,6 @@
 import CryptoJS from 'crypto-js'
 
 const baseURL = import.meta.env.VITE_BASE_URL
-export const callbackURL = baseURL
 
 const defaultAuthClientID = import.meta.env.VITE_AUTH_CLIENT_ID
 const defaultAuthServer = import.meta.env.VITE_AUTH_URL
@@ -9,6 +8,7 @@ const defaultAuthServer = import.meta.env.VITE_AUTH_URL
 export const authPath = "/oauth2/auth"
 export const tokenPath = "/oauth2/token"
 export const userInfoPath = "/userinfo"
+export const callbackURL = baseURL
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)

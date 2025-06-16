@@ -1,4 +1,4 @@
-import { useLogin, authPath, tokenPath, userInfoPath, getAuthServer, getAuthClientID, setAuthServer, setAuthClientID } from '../hooks/auth'
+import { useLogin, authPath, tokenPath, userInfoPath, getAuthServer, getAuthClientID, setAuthServer, setAuthClientID, callbackURL } from '../hooks/auth'
 import { createSignal } from "solid-js";
 
 export default () => {
@@ -26,7 +26,7 @@ export default () => {
 
             <section class="space-y-2">
                 <div>
-                    <label for="auth-server" class="block text-sm font-medium text-gray-300 mb-1 text-left">Auth Server:</label>
+                    <label for="auth-server" class="block text-sm font-medium text-gray-300 mb-1 text-left">Server:</label>
                     <input
                         data-testid="auth-server"
                         type="text"
@@ -53,6 +53,22 @@ export default () => {
                     />
                 </div>
 
+                <div>
+                    <label for="callback-url" class="block text-sm font-medium text-gray-300 mb-1 text-left">Callack URL:</label>
+                    <input
+                        data-testid="callback-url"
+                        type="text"
+                        id="callback"
+                        value={callbackURL}
+                        disabled
+                        class="w-full px-4 py-2 bg-gray-700 border text-gray-500 border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
+                    />
+                </div>
+            </section>
+
+            <hr class='my-6 border-gray-600' />
+
+            <section class="space-y-2">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1 text-left">Auth URL:</label>
                     <div data-testid="auth-url" class="bg-green-600 bg-opacity-70 text-white px-4 py-2 rounded-md font-mono text-sm break-words">
