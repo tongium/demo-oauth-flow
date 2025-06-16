@@ -9,6 +9,7 @@ export const authPath = "/oauth2/auth"
 export const tokenPath = "/oauth2/token"
 export const userInfoPath = "/userinfo"
 export const callbackURL = baseURL
+export const scope = "openid offline customer:account"
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)
@@ -102,7 +103,7 @@ export const useLogin = () => {
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
-    url.searchParams.append("scope", "openid offline")
+    url.searchParams.append("scope", scope)
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
