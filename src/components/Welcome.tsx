@@ -1,24 +1,24 @@
-import { useLogin, authPath, tokenPath, userInfoPath, getAuthServer, getAuthClientID, setAuthServer, setAuthClientID, callbackURL } from '../hooks/auth'
+import { useLogin, authPath, tokenPath, userInfoPath, getAuthServer, getAuthClientID, setAuthServer, setAuthClientID, callbackURL, scope } from '../hooks/auth'
 import { createSignal } from "solid-js";
 
+const [server, setServer] = createSignal(getAuthServer())
+const [clientID, setClientID] = createSignal(getAuthClientID())
+
+const updateClientID = (value: string) => {
+    setAuthClientID(value)
+    setClientID(value)
+}
+
+const updateServer = (value: string) => {
+    if (value.endsWith("/")) {
+        value = value.substring(0, value.length - 1)
+    }
+
+    setAuthServer(value)
+    setServer(value)
+}
+
 export default () => {
-    const [server, setServer] = createSignal(getAuthServer())
-    const [clientID, setClientID] = createSignal(getAuthClientID())
-
-    const updateClientID = (value: string) => {
-        setAuthClientID(value)
-        setClientID(value)
-    }
-
-    const updateServer = (value: string) => {
-        if (value.endsWith("/")) {
-            value = value.substring(0, value.length - 1)
-        }
-
-        setAuthServer(value)
-        setServer(value)
-    }
-
     return (
         <div class="bg-gray-800 p-4 rounded-lg shadow-xl max-w-md w-full">
             <h1 class="text-3xl font-bold text-center mb-2 text-white">Welcome to Bacon</h1>

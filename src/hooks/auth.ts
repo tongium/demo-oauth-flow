@@ -8,7 +8,8 @@ const defaultAuthServer = import.meta.env.VITE_AUTH_URL
 export const authPath = "/oauth2/auth"
 export const tokenPath = "/oauth2/token"
 export const userInfoPath = "/userinfo"
-export const callbackURL = baseURL
+export const callbackURL = `${baseURL}/authz/callback`
+export const scope = "openid offline customer:account"
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)
@@ -65,6 +66,7 @@ const convertMapToFormData = (data: Map<string, string>): string => {
     for (let [key, value] of data) {
         body = `${body}&${key}=${value}`
     }
+
     return body.substring(1)
 }
 
@@ -102,7 +104,7 @@ export const useLogin = () => {
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
-    url.searchParams.append("scope", "openid offline")
+    url.searchParams.append("scope", scope)
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
@@ -129,16 +131,15 @@ export const useExchangeToken = async (code: string) => {
         })
 
         const payload = await resp.json()
-        console.debug(payload)
 
         save("auth.access_token", payload.access_token)
         save("auth.id_token", payload.id_token)
         save("auth.refresh_token", payload.refresh_token)
         save("auth.token_type", payload.token_type)
+
+        location.href = baseURL
     } catch (err) {
         console.error(err)
-    } finally {
-        location.href = baseURL
     }
 }
 
@@ -175,7 +176,7 @@ export const useGetUserinfo = async (): Promise<Response | undefined> => {
     const accessToken = get("auth.access_token")
     if (accessToken) {
         try {
-            const tokenType = localStorage.getItem("auth.token_type")
+            const tokenType = get("auth.token_type")
             const resp = await fetch(getUserInfoUrl(), {
                 method: 'GET',
                 headers: {
