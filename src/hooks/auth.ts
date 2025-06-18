@@ -1,15 +1,28 @@
 import CryptoJS from 'crypto-js'
 
-const baseURL = import.meta.env.VITE_BASE_URL
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
-const defaultAuthClientID = import.meta.env.VITE_AUTH_CLIENT_ID
-const defaultAuthServer = import.meta.env.VITE_AUTH_URL
-const defaultScope = "openid offline"
+const DEFAULT_CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID
+const DEFAULT_SERVER = import.meta.env.VITE_AUTH_URL
+const DEFAULT_SCOPE = "openid offline"
 
-export const authPath = "/oauth2/auth"
-export const tokenPath = "/oauth2/token"
-export const userInfoPath = "/userinfo"
-export const callbackURL = baseURL
+export const AUTHORIZATION_PATH = "/oauth2/auth"
+export const TOKEN_PATH = "/oauth2/token"
+export const USERINFO_PATH = "/userinfo"
+export const CALLBACK_URL = BASE_URL
+
+const KEY = {
+    SERVER: "auth.server",
+    CLIENT_ID: "auth.client_id",
+    SCOPE: "auth.scope",
+
+    ID_TOKEN: "auth.id_token",
+    REFRESH_TOKEN: "auth.refresh_token",
+    ACCESS_TOKEN: "auth.access_token",
+    TOKEN_TYPE: "auth.token_type",
+    CHALLENGE: "auth.challenge",
+    STATE: "auth.state"
+}
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)
@@ -24,39 +37,39 @@ const remove = (key: string) => {
 }
 
 export const setAuthServer = (server: string) => {
-    return save("auth.server", server)
+    return save(KEY.SERVER, server)
 }
 
 export const getAuthServer = (): string => {
-    return get("auth.server") || defaultAuthServer
+    return get(KEY.SERVER) || DEFAULT_SERVER
 }
 
 export const setAuthClientID = (clientId: string) => {
-    return save("auth.client_id", clientId)
+    return save(KEY.CLIENT_ID, clientId)
 }
 
 export const getAuthClientID = (): string => {
-    return get("auth.client_id") || defaultAuthClientID
+    return get(KEY.CLIENT_ID) || DEFAULT_CLIENT_ID
 }
 
 export const setAuthScope = (scope: string) => {
-    return save("auth.scope", scope)
+    return save(KEY.SCOPE, scope)
 }
 
 export const getAuthScope = (): string => {
-    return get("auth.scope") || defaultScope
+    return get(KEY.SCOPE) || DEFAULT_SCOPE
 }
 
 const getAuthUrl = (): string => {
-    return getAuthServer() + authPath
+    return getAuthServer() + AUTHORIZATION_PATH
 }
 
 const getTokenUrl = (): string => {
-    return getAuthServer() + tokenPath
+    return getAuthServer() + TOKEN_PATH
 }
 
 const getUserInfoUrl = (): string => {
-    return getAuthServer() + userInfoPath
+    return getAuthServer() + USERINFO_PATH
 }
 
 const randomString = (length: number) => {
@@ -69,46 +82,38 @@ const randomString = (length: number) => {
     return result
 }
 
-const convertMapToFormData = (data: Map<string, string>): string => {
-    let body = ''
-    for (let [key, value] of data) {
-        body = `${body}&${key}=${value}`
-    }
-    return body.substring(1)
-}
-
 export const useIDToken = (): string | null => {
-    return get("auth.id_token")
+    return get(KEY.ID_TOKEN)
 }
 
 export const useAccessToken = (): string | null => {
-    return get("auth.access_token")
+    return get(KEY.ACCESS_TOKEN)
 }
 
 export const useReadRefreshToken = (): string | null => {
-    return get("auth.refresh_token")
+    return get(KEY.REFRESH_TOKEN)
 }
 
 export const useLogout = () => {
-    remove("auth.access_token")
-    remove("auth.id_token")
-    remove("auth.refresh_token")
-    remove("auth.token_type")
-    remove("auth.challenge")
-    remove("auth.state")
-    location.href = `${getAuthServer()}/logout?client_id=${getAuthClientID()}&redirect_uri=${encodeURIComponent(baseURL)}`
+    remove(KEY.ACCESS_TOKEN)
+    remove(KEY.ID_TOKEN)
+    remove(KEY.REFRESH_TOKEN)
+    remove(KEY.TOKEN_TYPE)
+    remove(KEY.CHALLENGE)
+    remove(KEY.STATE)
+    location.href = `${getAuthServer()}/logout?client_id=${getAuthClientID()}&redirect_uri=${encodeURIComponent(BASE_URL)}`
 }
 
 export const useLogin = () => {
     const challenge = randomString(43)
     const codeChallenge = CryptoJS.SHA256(challenge).toString(CryptoJS.enc.Base64url)
     const state = randomString(9)
-    save("auth.challenge", challenge)
-    save("auth.state", state)
+    save(KEY.CHALLENGE, challenge)
+    save(KEY.STATE, state)
 
     const url = new URL(getAuthUrl())
     url.searchParams.append("client_id", getAuthClientID())
-    url.searchParams.append("redirect_uri", callbackURL)
+    url.searchParams.append("redirect_uri", CALLBACK_URL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
     url.searchParams.append("scope", getAuthScope())
@@ -122,45 +127,16 @@ export const useExchangeToken = async (code: string) => {
     try {
         const challenge = get("auth.challenge")
 
-        const data = new Map<string, string>()
+        const data = new URLSearchParams()
         data.set('code', code)
         data.set('client_id', getAuthClientID())
         data.set('code_verifier', challenge || '')
-        data.set('redirect_uri', callbackURL)
+        data.set('redirect_uri', CALLBACK_URL)
         data.set('grant_type', 'authorization_code')
 
         const resp = await fetch(getTokenUrl(), {
             method: 'POST',
-            body: convertMapToFormData(data),
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            },
-        })
-
-        const payload = await resp.json()
-        console.debug(payload)
-
-        save("auth.access_token", payload.access_token)
-        save("auth.id_token", payload.id_token)
-        save("auth.refresh_token", payload.refresh_token)
-        save("auth.token_type", payload.token_type)
-    } catch (err) {
-        console.error(err)
-    } finally {
-        location.href = baseURL
-    }
-}
-
-export const useRefreshToken = async () => {
-    try {
-        const data = new Map<string, string>()
-        data.set('client_id', getAuthClientID())
-        data.set('refresh_token', get("auth.refresh_token") || '')
-        data.set('grant_type', 'refresh_token')
-
-        const resp = await fetch(getTokenUrl(), {
-            method: 'POST',
-            body: convertMapToFormData(data),
+            body: data,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
             },
@@ -168,10 +144,41 @@ export const useRefreshToken = async () => {
 
         const payload = await resp.json()
         if (resp.status < 400) {
-            save("auth.access_token", payload.access_token)
-            save("auth.id_token", payload.id_token)
-            save("auth.refresh_token", payload.refresh_token)
-            save("auth.token_type", payload.token_type)
+            save(KEY.ACCESS_TOKEN, payload.access_token)
+            save(KEY.ID_TOKEN, payload.id_token)
+            save(KEY.REFRESH_TOKEN, payload.refresh_token)
+            save(KEY.TOKEN_TYPE, payload.token_type)
+        } else {
+            throw new Error(payload.error_description || "can not exchange token")
+        }
+    } catch (err) {
+        alert(err)
+    } finally {
+        location.href = BASE_URL
+    }
+}
+
+export const useRefreshToken = async () => {
+    try {
+        const data = new URLSearchParams()
+        data.set('client_id', getAuthClientID())
+        data.set('refresh_token', get("auth.refresh_token") || '')
+        data.set('grant_type', 'refresh_token')
+
+        const resp = await fetch(getTokenUrl(), {
+            method: 'POST',
+            body: data,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            },
+        })
+
+        const payload = await resp.json()
+        if (resp.status < 400) {
+            save(KEY.ACCESS_TOKEN, payload.access_token)
+            save(KEY.ID_TOKEN, payload.id_token)
+            save(KEY.REFRESH_TOKEN, payload.refresh_token)
+            save(KEY.TOKEN_TYPE, payload.token_type)
         } else {
             throw new Error(payload.error_description || 'can not refresh token')
         }
@@ -181,10 +188,10 @@ export const useRefreshToken = async () => {
 }
 
 export const useGetUserinfo = async (): Promise<Response | undefined> => {
-    const accessToken = get("auth.access_token")
+    const accessToken = get(KEY.ACCESS_TOKEN)
     if (accessToken) {
         try {
-            const tokenType = get("auth.token_type")
+            const tokenType = get(KEY.TOKEN_TYPE)
             const resp = await fetch(getUserInfoUrl(), {
                 method: 'GET',
                 headers: {

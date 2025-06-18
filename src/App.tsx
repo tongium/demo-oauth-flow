@@ -6,7 +6,10 @@ import Dashboard from './components/Dashboard';
 
 const params = new URLSearchParams(window.location.search)
 if (params.has('code')) {
-  await useExchangeToken(params.get('code') || "")
+  const code = params.get('code')
+  if (code) {
+    await useExchangeToken(code)
+  }
 } else if (params.has('error_description')) {
   alert(params.get('error_description'))
 }
@@ -24,9 +27,6 @@ const App: Component = () => {
           <Dashboard />
         </Show>
       </main>
-      <footer>
-        <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-yellow-300' target="_blank">Github</a>
-      </footer>
     </div >
   );
 };

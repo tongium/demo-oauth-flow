@@ -1,17 +1,17 @@
-import {
-    useLogin,
-    authPath,
-    tokenPath,
-    userInfoPath,
-    getAuthServer,
-    getAuthClientID,
-    setAuthServer,
-    setAuthClientID,
-    getAuthScope,
-    setAuthScope,
-    callbackURL
-} from '../hooks/auth'
 import { createSignal } from "solid-js";
+import {
+    AUTHORIZATION_PATH,
+    CALLBACK_URL,
+    getAuthClientID,
+    getAuthScope,
+    getAuthServer,
+    setAuthClientID,
+    setAuthScope,
+    setAuthServer,
+    TOKEN_PATH,
+    useLogin,
+    USERINFO_PATH
+} from '../hooks/auth';
 import CopyTextInput from './CopyTextInput';
 import TextInput from './TextInput';
 
@@ -43,7 +43,9 @@ export default () => {
     return (
         <div class="bg-gray-800 p-4 rounded-lg bg-opacity-50 shadow-xl max-w-md w-full">
             <h1 class="text-xl font-bold text-center mb-2 text-white">Welcome to Bacon</h1>
-            <p class="text-center text-gray-400 mb-8">This website is built for demonstrating OAuth flow.</p>
+            <p class="text-center text-gray-400 mb-8">
+                This website illustrates the OAuth flow. The full source code is accessible on <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-green-300' target="_blank">Github</a>.
+            </p>
 
             <section class="space-y-2">
                 <TextInput id="auth-server" value={server()} label='Server:' onUpdate={updateServer} />
@@ -52,10 +54,10 @@ export default () => {
             </section>
 
             <section class="space-y-2 mt-4">
-                <CopyTextInput value={callbackURL} label="Callback URL:" id="callback-url" />
-                <CopyTextInput value={server() + authPath} label="Auth URL:" id="auth-url" />
-                <CopyTextInput value={server() + tokenPath} label="Token URL:" id="token-url" />
-                <CopyTextInput value={server() + userInfoPath} label="Userinfo URL:" id="userinfo-url" />
+                <CopyTextInput value={CALLBACK_URL} label="Callback URL:" id="callback-url" />
+                <CopyTextInput value={server() + AUTHORIZATION_PATH} label="Auth URL:" id="auth-url" />
+                <CopyTextInput value={server() + TOKEN_PATH} label="Token URL:" id="token-url" />
+                <CopyTextInput value={server() + USERINFO_PATH} label="Userinfo URL:" id="userinfo-url" />
             </section>
 
             <button
