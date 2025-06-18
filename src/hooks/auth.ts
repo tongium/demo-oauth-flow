@@ -4,12 +4,12 @@ const baseURL = import.meta.env.VITE_BASE_URL
 
 const defaultAuthClientID = import.meta.env.VITE_AUTH_CLIENT_ID
 const defaultAuthServer = import.meta.env.VITE_AUTH_URL
+const defaultScope = "openid offline"
 
 export const authPath = "/oauth2/auth"
 export const tokenPath = "/oauth2/token"
 export const userInfoPath = "/userinfo"
 export const callbackURL = baseURL
-export const scope = "openid offline customer:account"
 
 const save = (key: string, value: string) => {
     localStorage.setItem(key, value)
@@ -37,6 +37,14 @@ export const setAuthClientID = (clientId: string) => {
 
 export const getAuthClientID = (): string => {
     return get("auth.client_id") || defaultAuthClientID
+}
+
+export const setAuthScope = (scope: string) => {
+    return save("auth.scope", scope)
+}
+
+export const getAuthScope = (): string => {
+    return get("auth.scope") || defaultScope
 }
 
 const getAuthUrl = (): string => {
@@ -103,7 +111,7 @@ export const useLogin = () => {
     url.searchParams.append("redirect_uri", callbackURL)
     url.searchParams.append("state", state)
     url.searchParams.append("response_type", "code")
-    url.searchParams.append("scope", scope)
+    url.searchParams.append("scope", getAuthScope())
     url.searchParams.append("code_challenge", codeChallenge)
     url.searchParams.append("code_challenge_method", "S256")
 
@@ -176,7 +184,7 @@ export const useGetUserinfo = async (): Promise<Response | undefined> => {
     const accessToken = get("auth.access_token")
     if (accessToken) {
         try {
-            const tokenType = localStorage.getItem("auth.token_type")
+            const tokenType = get("auth.token_type")
             const resp = await fetch(getUserInfoUrl(), {
                 method: 'GET',
                 headers: {

@@ -1,13 +1,34 @@
-import { useLogin, authPath, tokenPath, userInfoPath, getAuthServer, getAuthClientID, setAuthServer, setAuthClientID, callbackURL } from '../hooks/auth'
+import {
+    useLogin,
+    authPath,
+    tokenPath,
+    userInfoPath,
+    getAuthServer,
+    getAuthClientID,
+    setAuthServer,
+    setAuthClientID,
+    getAuthScope,
+    setAuthScope,
+    callbackURL
+} from '../hooks/auth'
 import { createSignal } from "solid-js";
+import CopyTextInput from './CopyTextInput';
+import TextInput from './TextInput';
+
 
 export default () => {
     const [server, setServer] = createSignal(getAuthServer())
     const [clientID, setClientID] = createSignal(getAuthClientID())
+    const [scope, setScope] = createSignal(getAuthScope())
 
     const updateClientID = (value: string) => {
         setAuthClientID(value)
         setClientID(value)
+    }
+
+    const updateScope = (value: string) => {
+        setAuthScope(value)
+        setScope(value)
     }
 
     const updateServer = (value: string) => {
@@ -20,79 +41,25 @@ export default () => {
     }
 
     return (
-        <div class="bg-gray-800 p-4 rounded-lg shadow-xl max-w-md w-full">
-            <h1 class="text-3xl font-bold text-center mb-2 text-white">Welcome to Bacon</h1>
+        <div class="bg-gray-800 p-4 rounded-lg bg-opacity-50 shadow-xl max-w-md w-full">
+            <h1 class="text-xl font-bold text-center mb-2 text-white">Welcome to Bacon</h1>
             <p class="text-center text-gray-400 mb-8">This website is built for demonstrating OAuth flow.</p>
 
             <section class="space-y-2">
-                <div>
-                    <label for="auth-server" class="block text-sm font-medium text-gray-300 mb-1 text-left">Server:</label>
-                    <input
-                        data-testid="auth-server"
-                        type="text"
-                        id="auth-server"
-                        value={server()}
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                        onInput={(e) => {
-                            updateServer(e.target.value);
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <label for="client-id" class="block text-sm font-medium text-gray-300 mb-1 text-left">Client ID:</label>
-                    <input
-                        data-testid="client-id"
-                        type="text"
-                        id="client-id"
-                        value={clientID()}
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                        onInput={(e) => {
-                            updateClientID(e.target.value);
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <label for="callback-url" class="block text-sm font-medium text-gray-300 mb-1 text-left">Callack URL:</label>
-                    <input
-                        data-testid="callback-url"
-                        type="text"
-                        id="callback"
-                        value={callbackURL}
-                        disabled
-                        class="w-full px-4 py-2 bg-gray-700 border text-gray-500 border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                    />
-                </div>
+                <TextInput id="auth-server" value={server()} label='Server:' onUpdate={updateServer} />
+                <TextInput id="client-id" value={clientID()} label='Client ID:' onUpdate={updateClientID} />
+                <TextInput id="scope" value={scope()} label='Scope:' onUpdate={updateScope} />
             </section>
 
-            <hr class='my-6 border-gray-600' />
-
-            <section class="space-y-2">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1 text-left">Auth URL:</label>
-                    <div data-testid="auth-url" class="bg-green-600 bg-opacity-70 text-white px-4 py-2 rounded-md font-mono text-sm break-words">
-                        {server() + authPath}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1 text-left">Token URL:</label>
-                    <div data-testid="token-url" class="bg-green-600 bg-opacity-70 text-white px-4 py-2 rounded-md font-mono text-sm break-words">
-                        {server() + tokenPath}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1 text-left">User Info URL:</label>
-                    <div data-testid="userinfo-url" class="bg-green-600 bg-opacity-70 text-white px-4 py-2 rounded-md font-mono text-sm break-words">
-                        {server() + userInfoPath}
-                    </div>
-                </div>
+            <section class="space-y-2 mt-4">
+                <CopyTextInput value={callbackURL} label="Callback URL:" id="callback-url" />
+                <CopyTextInput value={server() + authPath} label="Auth URL:" id="auth-url" />
+                <CopyTextInput value={server() + tokenPath} label="Token URL:" id="token-url" />
+                <CopyTextInput value={server() + userInfoPath} label="Userinfo URL:" id="userinfo-url" />
             </section>
 
             <button
-                class="mt-8 w-full py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition duration-200 ease-in-out"
+                class="mt-8 w-full py-3 bg-yellow-300 hover:bg-yellow-500 text-gray-900 font-bold rounded-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-opacity-75 transition duration-200 ease-in-out"
                 onClick={useLogin}
             >
                 Continue
