@@ -1,8 +1,8 @@
-import { Component, Show } from 'solid-js';
+import { Component, ParentProps, Show } from 'solid-js';
 import styles from './App.module.css';
-import { useRequestTokensByAuthorizationCode, useIsLogin } from './hooks/auth';
-import Welcome from './components/Welcome';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/User';
+import Welcome from './components/Settings';
+import { useIsLogin, useRequestTokensByAuthorizationCode } from './hooks/auth';
 
 const params = new URLSearchParams(window.location.search)
 if (params.has('code')) {
@@ -16,16 +16,11 @@ if (params.has('code')) {
 
 const isLogin = await useIsLogin()
 
-const App: Component = () => {
+const App: Component = (props: ParentProps) => {
   return (
     <div class={styles.App}>
       <main class='min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center p-2'>
-        <Show
-          when={isLogin}
-          fallback={<Welcome />}
-        >
-          <Dashboard />
-        </Show>
+        {props.children}
       </main>
     </div >
   );

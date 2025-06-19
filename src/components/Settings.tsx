@@ -15,7 +15,6 @@ import {
 import CopyTextInput from './CopyTextInput';
 import TextInput from './TextInput';
 
-
 export default () => {
     const [server, setServer] = createSignal(getAuthServer())
     const [clientID, setClientID] = createSignal(getAuthClientID())
