@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js'
+import jwt_decode from "jwt-decode"
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
@@ -207,10 +208,17 @@ export const useUserInfo = async (): Promise<Response | undefined> => {
     }
 }
 
-export const useIsLogin = async (): Promise<boolean> => {
-    const userinfo = await useUserInfo()
-    if (userinfo) {
-        return true
+export const useIsLogin = (): boolean => {
+    const idToken = get(KEY.ID_TOKEN)
+    if (idToken) {
+        try {
+            const payload: any = jwt_decode(idToken)
+            if (payload && payload.exp && payload.exp > Date.now() / 1000) {
+                return true
+            }
+        } catch (err) {
+            console.error(err)
+        }
     }
 
     return false

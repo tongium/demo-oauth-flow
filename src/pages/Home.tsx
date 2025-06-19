@@ -4,12 +4,10 @@ import Settings from '../components/Settings';
 import User from '../components/User';
 
 
-const isLogin = await useIsLogin()
-
 export default () => {
     return (
         <Show
-            when={isLogin}
+            when={useIsLogin()}
             fallback={<Settings />}
         >
             <User />
