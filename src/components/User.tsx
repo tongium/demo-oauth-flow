@@ -3,10 +3,10 @@ import { createSignal } from 'solid-js'
 import { useAccessToken, useIDToken, useLogout, useReadRefreshToken, useRefreshToken, useUserInfo } from '../hooks/auth'
 import CopyTextInput from "./CopyTextInput"
 
-
 const [accessToken, setAccessToken] = createSignal(useAccessToken())
 const [refreshToken, setRefreshToken] = createSignal(useReadRefreshToken())
 const [userinfo, setUserinfo] = createSignal("{}")
+const [subject, setSubject] = createSignal("")
 
 const updateUserinfo = async () => {
     const resp = await useUserInfo()
@@ -15,17 +15,12 @@ const updateUserinfo = async () => {
     }
 }
 
-let payload: any = {
-    sub: ""
-}
-
 try {
     const token = useIDToken()
     if (token) {
-        const value = jwt_decode(token)
+        const value: any = jwt_decode(token)
         if (value) {
-            payload = value
-            console.info(payload)
+            setSubject(value.sub || "")
         }
     }
 } catch (err) {
@@ -48,7 +43,7 @@ export default () => {
                 You've successfully logged in.
             </div>
             <div class="text-left">
-                <CopyTextInput value={payload.sub} label="ID (Sub):" id="subject" />
+                <CopyTextInput value={subject()} label="ID (Sub):" id="subject" />
                 <CopyTextInput value={accessToken()} label="Access Token:" id="access-token" />
                 <CopyTextInput value={refreshToken()} label="Refresh Token:" id="refresh-token" />
                 <CopyTextInput value={useIDToken()} label="ID Token:" id="id-token" />

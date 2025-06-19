@@ -1,6 +1,6 @@
 import { RouteDefinition } from '@solidjs/router';
 import { lazy } from 'solid-js';
-import Home from './components/Settings';
+import Home from './pages/Home';
 import Callback from './pages/authz/Callback';
 
 export const routes: RouteDefinition[] = [
