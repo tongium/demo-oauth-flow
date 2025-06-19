@@ -9,6 +9,8 @@ const DEFAULT_SCOPE = "openid offline"
 export const AUTHORIZATION_PATH = "/oauth2/auth"
 export const TOKEN_PATH = "/oauth2/token"
 export const USERINFO_PATH = "/userinfo"
+export const LOGOUT_PATH = "/logout"
+
 export const CALLBACK_URL = BASE_URL
 
 const KEY = {
@@ -60,17 +62,11 @@ export const getAuthScope = (): string => {
     return get(KEY.SCOPE) || DEFAULT_SCOPE
 }
 
-const getAuthUrl = (): string => {
-    return getAuthServer() + AUTHORIZATION_PATH
-}
+const authURL = (): string => getAuthServer() + AUTHORIZATION_PATH
+const tokenURL = (): string => getAuthServer() + TOKEN_PATH
+const userinfoURL = (): string => getAuthServer() + USERINFO_PATH
+const logoutURL = (): string => getAuthServer() + LOGOUT_PATH
 
-const getTokenUrl = (): string => {
-    return getAuthServer() + TOKEN_PATH
-}
-
-const getUserInfoUrl = (): string => {
-    return getAuthServer() + USERINFO_PATH
-}
 
 const randomString = (length: number) => {
     let result = ''
@@ -101,7 +97,12 @@ export const useLogout = () => {
     remove(KEY.TOKEN_TYPE)
     remove(KEY.CHALLENGE)
     remove(KEY.STATE)
-    location.href = `${getAuthServer()}/logout?client_id=${getAuthClientID()}&redirect_uri=${encodeURIComponent(BASE_URL)}`
+
+    const url = new URL(logoutURL())
+    url.searchParams.append("client_id", getAuthClientID())
+    url.searchParams.append("redirect_uri", BASE_URL)
+
+    location.href = url.toString()
 }
 
 export const useLogin = () => {
@@ -111,7 +112,7 @@ export const useLogin = () => {
     save(KEY.CHALLENGE, challenge)
     save(KEY.STATE, state)
 
-    const url = new URL(getAuthUrl())
+    const url = new URL(authURL())
     url.searchParams.append("client_id", getAuthClientID())
     url.searchParams.append("redirect_uri", CALLBACK_URL)
     url.searchParams.append("state", state)
@@ -123,7 +124,7 @@ export const useLogin = () => {
     location.href = url.toString()
 }
 
-export const useExchangeToken = async (code: string) => {
+export const useRequestTokensByAuthorizationCode = async (code: string) => {
     try {
         const challenge = get("auth.challenge")
 
@@ -134,7 +135,7 @@ export const useExchangeToken = async (code: string) => {
         data.set('redirect_uri', CALLBACK_URL)
         data.set('grant_type', 'authorization_code')
 
-        const resp = await fetch(getTokenUrl(), {
+        const resp = await fetch(tokenURL(), {
             method: 'POST',
             body: data,
             headers: {
@@ -165,7 +166,7 @@ export const useRefreshToken = async () => {
         data.set('refresh_token', get("auth.refresh_token") || '')
         data.set('grant_type', 'refresh_token')
 
-        const resp = await fetch(getTokenUrl(), {
+        const resp = await fetch(tokenURL(), {
             method: 'POST',
             body: data,
             headers: {
@@ -187,12 +188,12 @@ export const useRefreshToken = async () => {
     }
 }
 
-export const useGetUserinfo = async (): Promise<Response | undefined> => {
+export const useUserInfo = async (): Promise<Response | undefined> => {
     const accessToken = get(KEY.ACCESS_TOKEN)
     if (accessToken) {
         try {
             const tokenType = get(KEY.TOKEN_TYPE)
-            const resp = await fetch(getUserInfoUrl(), {
+            const resp = await fetch(userinfoURL(), {
                 method: 'GET',
                 headers: {
                     'Authorization': `${tokenType} ${accessToken}`,
@@ -207,7 +208,7 @@ export const useGetUserinfo = async (): Promise<Response | undefined> => {
 }
 
 export const useIsLogin = async (): Promise<boolean> => {
-    const userinfo = await useGetUserinfo()
+    const userinfo = await useUserInfo()
     if (userinfo) {
         return true
     }

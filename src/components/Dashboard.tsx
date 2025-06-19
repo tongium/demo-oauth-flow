@@ -1,5 +1,5 @@
 import jwt_decode from "jwt-decode"
-import { useAccessToken, useIDToken, useLogout, useRefreshToken, useReadRefreshToken, useGetUserinfo } from '../hooks/auth'
+import { useAccessToken, useIDToken, useLogout, useRefreshToken, useReadRefreshToken, useUserInfo } from '../hooks/auth'
 import { createSignal } from 'solid-js'
 import CopyTextInput from "./CopyTextInput"
 
@@ -8,7 +8,7 @@ const [refreshToken, setRefreshToken] = createSignal(useReadRefreshToken())
 const [userinfo, setUserinfo] = createSignal("{}")
 
 const updateUserinfo = async () => {
-    const resp = await useGetUserinfo()
+    const resp = await useUserInfo()
     if (resp) {
         setUserinfo(JSON.stringify(await resp.json(), null, 4))
     }

@@ -42,9 +42,10 @@ export default () => {
 
     return (
         <div class="bg-gray-800 p-4 rounded-lg bg-opacity-50 shadow-xl max-w-md w-full">
-            <h1 class="text-xl font-bold text-center mb-2 text-white">Welcome to Bacon</h1>
-            <p class="text-center text-gray-400 mb-8">
-                This website illustrates the OAuth flow. The full source code is accessible on <a href="https://github.com/tongium/demo-oauth-flow" class='hover:text-green-300' target="_blank">Github</a>.
+            <h1 class="text-xl font-bold text-center mb-2 text-white">Welcome Partner</h1>
+            <p class="text-center text-gray-300 mb-8">
+                This website illustrates the <a class='text-green-400 font-bold hover:text-green-300' target="_blank" href="https://www.oauth.com/oauth2-servers/pkce/authorization-code-exchange/">OAuth 2.0 flow</a>.
+                The full source code is accessible on <a href="https://github.com/tongium/demo-oauth-flow" class='text-green-400 font-bold hover:text-green-300' target="_blank">Github</a>.
             </p>
 
             <section class="space-y-2">
