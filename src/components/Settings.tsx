@@ -61,7 +61,7 @@ export default () => {
             </section>
 
             <button
-                class="mt-8 w-full py-3 bg-yellow-300 hover:bg-yellow-500 text-gray-900 font-bold rounded-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-opacity-75 transition duration-200 ease-in-out"
+                class="mt-8 w-full py-3 bg-yellow-200 hover:bg-yellow-100 text-gray-900 font-bold rounded-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-opacity-75 transition duration-200 ease-in-out"
                 onClick={useLogin}
             >
                 Continue

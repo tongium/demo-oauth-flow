@@ -56,8 +56,8 @@ export default () => {
                 </div>
             </div>
             <div class="flex flex-row gap-4 justify-center pt-2">
-                <button id="refresh-btn" class="bg-yellow-300 rounded-sm hover:bg-yellow-500 text-black font-bold py-2 px-2 w-full" onClick={refresh}>Refresh</button>
-                <button id="logout-btn" class="bg-yellow-300 rounded-sm hover:bg-yellow-500 text-black font-bold py-2 px-2 w-full" onClick={useLogout}>Logout</button>
+                <button id="refresh-btn" class="bg-yellow-200 rounded-sm hover:bg-yellow-100 text-black font-bold py-2 px-2 w-full" onClick={refresh}>Refresh</button>
+                <button id="logout-btn" class="bg-yellow-200 rounded-sm hover:bg-yellow-100 text-black font-bold py-2 px-2 w-full" onClick={useLogout}>Logout</button>
             </div>
         </div>
     )
