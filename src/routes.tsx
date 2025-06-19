@@ -1,17 +1,12 @@
 import { RouteDefinition } from '@solidjs/router';
 import { lazy } from 'solid-js';
-import Callback from './pages/authz/Callback';
-import Dashboard from './components/User';
 import Home from './components/Settings';
+import Callback from './pages/authz/Callback';
 
 export const routes: RouteDefinition[] = [
     {
         path: '/',
         component: Home,
-    },
-    {
-        path: '/dashboard',
-        component: Dashboard,
     },
     {
         path: '/authz/callback',

@@ -11,7 +11,7 @@ export const TOKEN_PATH = "/oauth2/token"
 export const USERINFO_PATH = "/userinfo"
 export const LOGOUT_PATH = "/logout"
 
-export const CALLBACK_URL = BASE_URL
+export const CALLBACK_URL = BASE_URL + "/authz/callback"
 
 const KEY = {
     SERVER: "auth.server",
