@@ -176,4 +176,4 @@ Found a bug or want to improve? Feel free to open an issue or submit a pull requ
 
 ## License
 
-MIT
+[MIT](LICENSE)
