@@ -169,8 +169,9 @@ export class OAuthClient {
     static getLogoutUrl(config: OAuthConfig, redirectUri: string): string {
         const logoutEndpoint = config.endpoints?.logout || OAUTH_CONFIG.ENDPOINTS.LOGOUT
         const url = new URL(config.server + logoutEndpoint)
-        url.searchParams.append('client_id', config.clientId)
-        url.searchParams.append('redirect_uri', redirectUri)
+        url.searchParams.append('post_logout_redirect_uri', logoutEndpoint)
+        url.searchParams.append('client_id', config.clientId) // legacy
+        url.searchParams.append('redirect_uri', redirectUri) // legacy
         return url.toString()
     }
 }
