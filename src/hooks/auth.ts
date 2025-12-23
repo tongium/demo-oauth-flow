@@ -3,7 +3,7 @@ import { OAuthClient } from '../services/oauth-client'
 import { OAUTH_CONFIG, getCallbackUrl } from '../config/oauth'
 import { StorageKeys, storage } from '../lib/storage'
 import { OAuthError, getErrorMessage } from '../lib/errors'
-import type { OAuthConfig, IdTokenPayload, OAuthEndpoints, ShareableSettings } from '../types'
+import type { OAuthConfig, IdTokenPayload, OAuthEndpoints, ShareableSettings, TokenPayload } from '../types'
 import { readSettingsFromUrl, clearSettingsFromUrl } from '../lib/settings-share'
 
 // Export for backward compatibility
@@ -112,6 +112,26 @@ const getOAuthConfig = (): OAuthConfig => ({
 })
 
 /**
+ * Persist OAuth tokens to storage
+ */
+const saveTokens = (tokens: TokenPayload): void => {
+    storage.save(StorageKeys.ACCESS_TOKEN, tokens.access_token)
+    storage.save(StorageKeys.ID_TOKEN, tokens.id_token)
+    storage.save(StorageKeys.REFRESH_TOKEN, tokens.refresh_token)
+    storage.save(StorageKeys.TOKEN_TYPE, tokens.token_type)
+}
+
+/**
+ * Clear persisted OAuth tokens from storage
+ */
+export const clearTokens = (): void => {
+    storage.remove(StorageKeys.ACCESS_TOKEN)
+    storage.remove(StorageKeys.ID_TOKEN)
+    storage.remove(StorageKeys.REFRESH_TOKEN)
+    storage.remove(StorageKeys.TOKEN_TYPE)
+}
+
+/**
  * Token getters
  */
 export const useIDToken = (): string | null => {
@@ -148,7 +168,6 @@ export const useLogout = () => {
     try {
         const idToken = storage.get(StorageKeys.ID_TOKEN)
         const config = getOAuthConfig()
-        storage.clearAuth()
         const logoutUrl = OAuthClient.getLogoutUrl(config, idToken, OAUTH_CONFIG.BASE_URL)
         location.href = logoutUrl
     } catch (error) {
@@ -165,11 +184,7 @@ export const useRequestTokensByAuthorizationCode = async (code: string): Promise
     try {
         const config = getOAuthConfig()
         const tokens = await OAuthClient.exchangeAuthorizationCode(code, config)
-
-        storage.save(StorageKeys.ACCESS_TOKEN, tokens.access_token)
-        storage.save(StorageKeys.ID_TOKEN, tokens.id_token)
-        storage.save(StorageKeys.REFRESH_TOKEN, tokens.refresh_token)
-        storage.save(StorageKeys.TOKEN_TYPE, tokens.token_type)
+        saveTokens(tokens)
     } catch (error) {
         const message = getErrorMessage(error)
         alert(`Token exchange failed: ${message}`)
@@ -192,11 +207,7 @@ export const useRefreshToken = async (): Promise<void> => {
         }
 
         const tokens = await OAuthClient.refreshAccessToken(config, refreshToken)
-
-        storage.save(StorageKeys.ACCESS_TOKEN, tokens.access_token)
-        storage.save(StorageKeys.ID_TOKEN, tokens.id_token)
-        storage.save(StorageKeys.REFRESH_TOKEN, tokens.refresh_token)
-        storage.save(StorageKeys.TOKEN_TYPE, tokens.token_type)
+        saveTokens(tokens)
     } catch (error) {
         const message = getErrorMessage(error)
         console.error(`Token refresh failed: ${message}`)
@@ -227,20 +238,24 @@ export const useUserInfo = async (): Promise<object> => {
 
 /**
  * Check if user is currently logged in
- * Validates that ID token exists and is not expired
+ * Validates by calling /userinfo with the stored access token.
+ * Returns true on success; on failure, clears tokens and returns false.
  */
-export const useIsLogin = (): boolean => {
-    const idToken = storage.get(StorageKeys.ID_TOKEN)
-    if (idToken) {
-        try {
-            const payload = jwt_decode<IdTokenPayload>(idToken)
-            if (payload && payload.exp && payload.exp > Date.now() / 1000) {
-                return true
-            }
-        } catch (error) {
-            console.error('Failed to validate ID token:', error)
-        }
+export const useIsLoginAsync = async (): Promise<boolean> => {
+    try {
+        const config = getOAuthConfig()
+        const accessToken = storage.get(StorageKeys.ACCESS_TOKEN)
+        const tokenType = storage.get(StorageKeys.TOKEN_TYPE) || 'Bearer'
+        if (!accessToken) return false
+        await OAuthClient.getUserInfo(config, accessToken, tokenType)
+        return true
+    } catch {
+        clearTokens()
+        return false
     }
-
-    return false
 }
+
+/**
+ * @deprecated Use useIsLoginAsync() instead.
+ */
+export const useIsLogin = useIsLoginAsync
