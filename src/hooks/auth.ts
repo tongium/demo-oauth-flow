@@ -146,9 +146,10 @@ export const useLogin = () => {
  */
 export const useLogout = () => {
     try {
+        const idToken = storage.get(StorageKeys.ID_TOKEN)
         const config = getOAuthConfig()
         storage.clearAuth()
-        const logoutUrl = OAuthClient.getLogoutUrl(config, OAUTH_CONFIG.BASE_URL)
+        const logoutUrl = OAuthClient.getLogoutUrl(config, idToken, OAUTH_CONFIG.BASE_URL)
         location.href = logoutUrl
     } catch (error) {
         const message = getErrorMessage(error)
