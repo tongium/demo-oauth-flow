@@ -3,16 +3,15 @@ import { useRequestTokensByAuthorizationCode } from '../../hooks/auth'
 
 export default () => {
     // Handle OAuth callback in effect hook, not at module level
-    createEffect(() => {
+    createEffect(async () => {
         const params = new URLSearchParams(window.location.search)
-
         if (params.has('code')) {
-            useRequestTokensByAuthorizationCode(params.get('code') || '')
+            await useRequestTokensByAuthorizationCode(params.get('code') || '')
         } else if (params.has('error_description')) {
             alert(`OAuth Error: ${params.get('error_description')}`)
-            // Redirect to home on error
-            location.href = import.meta.env.VITE_BASE_URL
         }
+
+        location.href = import.meta.env.VITE_BASE_URL
     })
 
     return (

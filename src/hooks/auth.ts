@@ -190,9 +190,6 @@ export const useRequestTokensByAuthorizationCode = async (code: string): Promise
     } catch (error) {
         const message = getErrorMessage(error)
         alert(`Token exchange failed: ${message}`)
-    } finally {
-        // Always redirect back to home
-        location.href = OAUTH_CONFIG.BASE_URL
     }
 }
 
@@ -254,8 +251,7 @@ export const useRevokeRefreshToken = async (): Promise<void> => {
         clearTokens()
     } catch (error) {
         const message = getErrorMessage(error)
-        console.error(`Failed to revoke token: ${message}`)
-        throw error
+        alert(`Revoke tokens failed: ${message}`)
     }
 }
 
