@@ -20,10 +20,12 @@ export const OAUTH_CONFIG = {
         TOKEN: '/oauth2/token',
         USERINFO: '/userinfo',
         LOGOUT: '/oauth2/sessions/logout',
+        REVOKE: '/oauth2/revoke'
     },
 
     // Callback URL for OAuth redirect
-    CALLBACK_PATH: '/authz/callback',
+    REDIRECT_PATH: '/authz/callback',
+    POST_LOGOUT_REDIRECT_PATH: '/authz/logout',
 
     // PKCE configuration
     PKCE: {
@@ -33,7 +35,8 @@ export const OAUTH_CONFIG = {
     },
 } as const
 
-export const getCallbackUrl = () => BASE_URL + OAUTH_CONFIG.CALLBACK_PATH
+export const getRedirectUrl = () => BASE_URL + OAUTH_CONFIG.REDIRECT_PATH
+export const getPostLogoutRedirectURL = () => BASE_URL + OAUTH_CONFIG.POST_LOGOUT_REDIRECT_PATH
 
 export const getAuthUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
 export const getTokenUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.TOKEN

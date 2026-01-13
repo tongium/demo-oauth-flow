@@ -1,13 +1,13 @@
 import jwt_decode from 'jwt-decode'
 import { OAuthClient } from '../services/oauth-client'
-import { OAUTH_CONFIG, getCallbackUrl } from '../config/oauth'
+import { OAUTH_CONFIG, getRedirectUrl, getPostLogoutRedirectURL } from '../config/oauth'
 import { StorageKeys, storage } from '../lib/storage'
 import { OAuthError, getErrorMessage } from '../lib/errors'
-import type { OAuthConfig, IdTokenPayload, OAuthEndpoints, ShareableSettings, TokenPayload } from '../types'
+import type { OAuthConfig, OAuthEndpoints, ShareableSettings, TokenPayload } from '../types'
 import { readSettingsFromUrl, clearSettingsFromUrl } from '../lib/settings-share'
 
 // Export for backward compatibility
-export const CALLBACK_URL = getCallbackUrl()
+export const CALLBACK_URL = getRedirectUrl()
 export const AUTHORIZATION_PATH = OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
 export const TOKEN_PATH = OAUTH_CONFIG.ENDPOINTS.TOKEN
 export const USERINFO_PATH = OAUTH_CONFIG.ENDPOINTS.USERINFO
@@ -55,6 +55,7 @@ export const setAuthEndpoints = (endpoints: OAuthEndpoints) => {
     storage.save(StorageKeys.ENDPOINT_TOKEN, endpoints.token)
     storage.save(StorageKeys.ENDPOINT_USERINFO, endpoints.userinfo)
     storage.save(StorageKeys.ENDPOINT_LOGOUT, endpoints.logout)
+    storage.save(StorageKeys.ENDPOINT_REVOKE, endpoints.revoke)
 }
 
 export const getAuthEndpoints = (): OAuthEndpoints => {
@@ -63,6 +64,7 @@ export const getAuthEndpoints = (): OAuthEndpoints => {
         token: storage.get(StorageKeys.ENDPOINT_TOKEN) || OAUTH_CONFIG.ENDPOINTS.TOKEN,
         userinfo: storage.get(StorageKeys.ENDPOINT_USERINFO) || OAUTH_CONFIG.ENDPOINTS.USERINFO,
         logout: storage.get(StorageKeys.ENDPOINT_LOGOUT) || OAUTH_CONFIG.ENDPOINTS.LOGOUT,
+        revoke: storage.get(StorageKeys.ENDPOINT_REVOKE) || OAUTH_CONFIG.ENDPOINTS.REVOKE,
     }
 }
 
@@ -168,7 +170,7 @@ export const useLogout = () => {
     try {
         const idToken = storage.get(StorageKeys.ID_TOKEN)
         const config = getOAuthConfig()
-        const logoutUrl = OAuthClient.getLogoutUrl(config, idToken, OAUTH_CONFIG.BASE_URL)
+        const logoutUrl = OAuthClient.getLogoutUrl(config, idToken, getPostLogoutRedirectURL())
         location.href = logoutUrl
     } catch (error) {
         const message = getErrorMessage(error)
@@ -232,6 +234,27 @@ export const useUserInfo = async (): Promise<object> => {
     } catch (error) {
         const message = getErrorMessage(error)
         console.error(`Failed to fetch user info: ${message}`)
+        throw error
+    }
+}
+
+/**
+ * Revoke the current refresh token
+ */
+export const useRevokeRefreshToken = async (): Promise<void> => {
+    try {
+        const config = getOAuthConfig()
+        const refreshToken = storage.get(StorageKeys.REFRESH_TOKEN)
+
+        if (!refreshToken) {
+            throw new Error('No refresh token available')
+        }
+
+        await OAuthClient.revokeToken(config, refreshToken, 'refresh_token')
+        clearTokens()
+    } catch (error) {
+        const message = getErrorMessage(error)
+        console.error(`Failed to revoke token: ${message}`)
         throw error
     }
 }

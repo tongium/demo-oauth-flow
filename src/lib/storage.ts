@@ -13,6 +13,7 @@ export const StorageKeys = {
     ENDPOINT_TOKEN: 'auth.endpoint.token',
     ENDPOINT_USERINFO: 'auth.endpoint.userinfo',
     ENDPOINT_LOGOUT: 'auth.endpoint.logout',
+    ENDPOINT_REVOKE: 'auth.endpoint.revoke',
 
     // Token storage
     ID_TOKEN: 'auth.id_token',

@@ -3,7 +3,7 @@
  * Handles all OAuth API communication with the authorization server
  */
 
-import { OAUTH_CONFIG, getCallbackUrl } from '../config/oauth'
+import { OAUTH_CONFIG, getRedirectUrl } from '../config/oauth'
 import { generatePKCEPair, generateState } from '../lib/crypto'
 import { OAuthError, TokenExchangeError, ValidationError } from '../lib/errors'
 import { storage, StorageKeys } from '../lib/storage'
@@ -26,7 +26,7 @@ export class OAuthClient {
         const authEndpoint = endpoints?.authorization || OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
         const url = new URL(server + authEndpoint)
         url.searchParams.append('client_id', clientId)
-        url.searchParams.append('redirect_uri', getCallbackUrl())
+        url.searchParams.append('redirect_uri', getRedirectUrl())
         url.searchParams.append('response_type', 'code')
         url.searchParams.append('scope', scope)
         url.searchParams.append('state', state)
@@ -53,7 +53,7 @@ export class OAuthClient {
         data.set('code', code)
         data.set('client_id', config.clientId)
         data.set('code_verifier', challenge)
-        data.set('redirect_uri', getCallbackUrl())
+        data.set('redirect_uri', getRedirectUrl())
 
         const tokenEndpoint = config.endpoints?.token || OAUTH_CONFIG.ENDPOINTS.TOKEN
         try {
@@ -178,5 +178,48 @@ export class OAuthClient {
         url.searchParams.append('client_id', config.clientId) // legacy
         url.searchParams.append('redirect_uri', redirectUri) // legacy
         return url.toString()
+    }
+
+    /**
+     * Revoke access token or refresh token
+     */
+    static async revokeToken(
+        config: OAuthConfig,
+        token: string,
+        tokenTypeHint?: 'access_token' | 'refresh_token',
+    ): Promise<void> {
+        if (!token) {
+            return
+        }
+
+        const data = new URLSearchParams()
+        data.set('token', token)
+        data.set('client_id', config.clientId)
+        if (tokenTypeHint) {
+            data.set('token_type_hint', tokenTypeHint)
+        }
+
+        const revokeEndpoint = config.endpoints?.revoke || OAUTH_CONFIG.ENDPOINTS.REVOKE
+        try {
+            const response = await fetch(config.server + revokeEndpoint, {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Authorization': `Bearer ${token}`
+                },
+            })
+
+            if (!response.ok) {
+                // RFC 7009 says revocations should return 200 even if the token is invalid,
+                // but we'll log or throw if the server returns an actual error status
+                console.warn(`Revocation endpoint returned ${response.status}: ${response.statusText}`)
+            }
+        } catch (error) {
+            console.error('Failed to revoke token', error)
+            // Revocation is best-effort, usually during logout, so we often suppress errors here
+            // or rethrow if your app policy requires it.
+            throw error
+        }
     }
 }

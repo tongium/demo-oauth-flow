@@ -38,6 +38,7 @@ export interface OAuthEndpoints {
     token: string
     userinfo: string
     logout: string
+    revoke: string
 }
 
 export interface OAuthConfig {

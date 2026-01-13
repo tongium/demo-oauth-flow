@@ -13,7 +13,7 @@ import {
     initializeFromUrl,
 } from '../hooks/auth'
 import { generateShareableUrl } from '../lib/settings-share'
-import { getCallbackUrl, OAUTH_CONFIG } from '../config/oauth'
+import { getRedirectUrl, getPostLogoutRedirectURL, OAUTH_CONFIG } from '../config/oauth'
 import type { OAuthEndpoints } from '../types'
 import CopyTextInput from './CopyTextInput'
 import TextInput from './TextInput'
@@ -134,26 +134,35 @@ export default () => {
                     <TextInput id='client-id' value={clientID()} label='Client ID' onUpdate={updateClientID} />
                 </div>
 
-                {/* Callback URL */}
-                <div class='mt-6'>
-                    <CopyTextInput value={getCallbackUrl()} label='Callback URL' id='callback-url' />
-                    <p class='text-xs text-gray-400 mt-1'>Use this URL in your OAuth app configuration</p>
-                </div>
+                <section class='mt-6 mb-4'>
+                    <p class='text-xs text-gray-400 mt-1'>Use below URLs in your OAuth app configuration</p>
+
+                    {/* Redirect URL */}
+                    <div class='mt-2'>
+                        <CopyTextInput value={getRedirectUrl()} label='Redirect URL' id='callback-url' />
+                    </div>
+
+                    {/* Post Logout Redirect URL */}
+                    <div class='mt-2'>
+                        <CopyTextInput value={getPostLogoutRedirectURL()} label='Post Logout Redirect URL' id='logout-url' />
+                    </div>
+                </section>
 
                 {/* Action Buttons */}
-                <div class='mt-6 space-y-3'>
+                <div class='mt-6 flex space-x-3'>
                     <button
-                        class='w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out'
-                        onClick={useLogin}
+                        class='px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200 ease-in-out flex items-center justify-center'
+                        onClick={handleShare}
+                        title="Share Configuration"
                     >
-                        Start OAuth Flow →
+                        📋
                     </button>
 
                     <button
-                        class='w-full py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200 ease-in-out'
-                        onClick={handleShare}
+                        class='flex-1 py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold rounded-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out'
+                        onClick={useLogin}
                     >
-                        📋 Share Configuration
+                        Start OAuth Flow →
                     </button>
                 </div>
 
@@ -241,6 +250,12 @@ export default () => {
                                     label='Logout Endpoint'
                                     onUpdate={(v) => updateEndpoint('logout', v)}
                                 />
+                                <TextInput
+                                    id='endpoint-revoke'
+                                    value={endpoints().revoke}
+                                    label='Revoke Endpoint'
+                                    onUpdate={(v) => updateEndpoint('revoke', v)}
+                                />
                             </div>
                         </section>
 
@@ -271,6 +286,11 @@ export default () => {
                                     label='Logout URL'
                                     id='sidebar-logout-url'
                                 />
+                                <CopyTextInput
+                                    value={server() + endpoints().revoke}
+                                    label='Revoke URL'
+                                    id='sidebar-revoke-url'
+                                />
                             </div>
                         </section>
 
@@ -289,6 +309,7 @@ export default () => {
                                             token: OAUTH_CONFIG.ENDPOINTS.TOKEN,
                                             userinfo: OAUTH_CONFIG.ENDPOINTS.USERINFO,
                                             logout: OAUTH_CONFIG.ENDPOINTS.LOGOUT,
+                                            revoke: OAUTH_CONFIG.ENDPOINTS.REVOKE
                                         }
 
                                         // Update state
