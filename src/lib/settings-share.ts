@@ -33,6 +33,16 @@ export function decodeSettings(encoded: string): ShareableSettings | null {
             return null
         }
 
+        // backward compatibility: if endpoints are not contains server URL, prepend server URL to endpoints
+        if (settings.endpoints) {
+            const { server, endpoints } = settings
+            for (const key in endpoints) {
+                if (endpoints[key as keyof OAuthEndpoints] && endpoints[key as keyof OAuthEndpoints].startsWith('/')) {
+                    endpoints[key as keyof OAuthEndpoints] = server + endpoints[key as keyof OAuthEndpoints]
+                }
+            }
+        }
+
         return settings
     } catch (error) {
         console.error('Failed to decode settings:', error)
