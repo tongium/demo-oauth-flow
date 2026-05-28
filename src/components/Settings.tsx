@@ -42,10 +42,14 @@ export default () => {
     /**
      * Normalize and update server URL
      */
-    const updateServer = (value: string) => {
+    const updateServer = async (value: string) => {
         const normalized = value.endsWith('/') ? value.slice(0, -1) : value
         setAuthServer(normalized)
         setServer(normalized)
+
+        const newEndpoints = await getDefaultEndpoints(normalized)
+        setEndpoints(newEndpoints)
+        setAuthEndpoints(newEndpoints)
     }
 
     const updateClientID = (value: string) => {

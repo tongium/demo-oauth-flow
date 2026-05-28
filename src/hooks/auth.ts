@@ -21,9 +21,6 @@ export const cleanup = () => {
  */
 export const setAuthServer = (server: string) => {
     storage.save(StorageKeys.SERVER, server)
-    getDefaultEndpoints(server).then((endpoints) => {
-        setAuthEndpoints(endpoints)
-    })
 }
 
 export const getAuthServer = (): string => {
