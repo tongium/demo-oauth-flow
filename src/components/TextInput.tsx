@@ -5,10 +5,14 @@ interface TextInputProps {
     onUpdate: (value: string) => void
 }
 
-export default (props: TextInputProps) => {
+/**
+ * Minimalist Text Input
+ * Uses a deep zinc background and subtle borders for a modern look.
+ */
+export default function TextInput(props: TextInputProps) {
     return (
-        <div>
-            <label for={props.id} class='block text-sm font-medium text-gray-300 mb-1 text-left'>
+        <div class="flex flex-col gap-1.5">
+            <label for={props.id} class='text-[13px] font-medium text-zinc-400'>
                 {props.label}
             </label>
             <input
@@ -16,7 +20,7 @@ export default (props: TextInputProps) => {
                 type='text'
                 id={props.id}
                 value={props.value}
-                class='w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200 ease-in-out'
+                class='w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all text-sm'
                 onInput={(e) => {
                     props.onUpdate(e.target.value)
                 }}

@@ -1,291 +1,336 @@
 import jwt_decode from 'jwt-decode'
-import { createEffect, createMemo, createSignal, Show } from 'solid-js'
-import { useAccessToken, useIDToken, useLogout, useReadRefreshToken, useRefreshToken, useUserInfo, getAuthServer, getAuthEndpoints } from '../hooks/auth'
+import { createEffect, createMemo, createSignal, Show, For } from 'solid-js'
+import { 
+    getAccessToken, 
+    getIDToken, 
+    performLogout, 
+    getRefreshToken, 
+    refreshAccessToken, 
+    fetchUserInfo, 
+    getAuthEndpoints 
+} from '../hooks/auth'
 import { getErrorMessage } from '../lib/errors'
-import type { IdTokenPayload, UserInfo } from '../types'
+import type { IdTokenPayload } from '../types'
 import CopyTextInput from './CopyTextInput'
-
-const [accessToken, setAccessToken] = createSignal<string | null>(null)
-const [refreshToken, setRefreshToken] = createSignal<string | null>(null)
-const [userinfo, setUserinfo] = createSignal<string>('{}')
-const [subject, setSubject] = createSignal<string>('')
-const [loading, setLoading] = createSignal(false)
-const [error, setError] = createSignal<string | null>(null)
+import JsonViewer from './JsonViewer'
 
 /**
- * Update user info from server
+ * Smart Token Visualizer
+ * Automatically detects JWT format and provides color-coded visualization.
+ * Falls back to a clean mono display for opaque tokens.
  */
-const updateUserinfo = async () => {
-    try {
-        setLoading(true)
-        setError(null)
-        const info = await useUserInfo()
-        setUserinfo(JSON.stringify(info, null, 4))
-    } catch (err) {
-        const message = getErrorMessage(err)
-        setError(`Failed to fetch user info: ${message}`)
-        console.error(err)
-    } finally {
-        setLoading(false)
+function TokenDisplay(props: { token: string | null; label: string }) {
+    const [isExpanded, setIsExpanded] = createSignal(false)
+    const [justCopied, setJustCopied] = createSignal(false)
+    
+    const isJwt = createMemo(() => {
+        if (!props.token) return false
+        return props.token.split('.').length === 3
+    })
+    
+    const copy = (e: MouseEvent) => {
+        e.stopPropagation()
+        if (!props.token) return
+        navigator.clipboard.writeText(props.token)
+        setJustCopied(true)
+        setTimeout(() => setJustCopied(false), 2000)
     }
+
+    const CopyButton = () => (
+        <button 
+            onClick={copy} 
+            class={`absolute top-2 right-2 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${justCopied() ? 'text-emerald-400 opacity-100' : 'text-zinc-500 opacity-0 group-hover/box:opacity-100 hover:text-zinc-200'}`}
+        >
+            {justCopied() ? 'Copied' : 'Copy'}
+        </button>
+    )
+
+    return (
+        <div class="flex flex-col gap-1.5">
+            <Show 
+                when={props.token} 
+                fallback={
+                    <div class="flex flex-col gap-1.5 opacity-50">
+                        <label class='text-[13px] font-medium text-zinc-400'>{props.label}</label>
+                        <div class="bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-zinc-600 font-mono text-[12px]">
+                            No token available
+                        </div>
+                    </div>
+                }
+            >
+                <div class="flex items-center gap-3">
+                    <label class='text-[13px] font-medium text-zinc-400'>{props.label}</label>
+                    <Show when={isJwt()}>
+                        <button 
+                            onClick={() => setIsExpanded(!isExpanded())}
+                            class="text-[10px] text-zinc-500 hover:text-zinc-300 underline underline-offset-4"
+                        >
+                            {isExpanded() ? 'Hide structure' : 'Show structure'}
+                        </button>
+                    </Show>
+                </div>
+                
+                <div class="relative group/box">
+                    <Show 
+                        when={isExpanded() && isJwt()} 
+                        fallback={
+                            <div 
+                                class={`bg-zinc-900 border border-zinc-800 rounded px-3 py-2 transition-colors ${isJwt() ? 'cursor-pointer hover:border-zinc-700' : 'cursor-default'}`}
+                                onClick={() => isJwt() && setIsExpanded(true)}
+                            >
+                                <code class="text-[12px] text-zinc-500 font-mono truncate block w-full pr-12">
+                                    {props.token}
+                                </code>
+                            </div>
+                        }
+                    >
+                        <div class="animate-in fade-in zoom-in-95 duration-200">
+                            <div class="bg-zinc-900 border border-zinc-800 rounded p-3 font-mono text-[12px] break-all leading-relaxed cursor-default pr-12">
+                                <span class="text-red-400/80">{props.token!.split('.')[0]}</span>
+                                <span class="text-zinc-600">.</span>
+                                <span class="text-emerald-400/80">{props.token!.split('.')[1]}</span>
+                                <span class="text-zinc-600">.</span>
+                                <span class="text-blue-400/80">{props.token!.split('.')[2]}</span>
+                            </div>
+                            <div class="flex gap-4 mt-2">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-red-400/80" />
+                                    <span class="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">Header</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                                    <span class="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">Payload</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
+                                    <span class="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">Signature</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Show>
+                    <CopyButton />
+                </div>
+            </Show>
+        </div>
+    )
 }
-
 /**
- * Initialize component with user data
+ * Minimalist User Profile Component
+ * 
+ * Features a single vertical flow with subtle dividers and a clean tech aesthetic.
  */
-createEffect(() => {
-    // Get and set tokens
-    setAccessToken(useAccessToken())
-    setRefreshToken(useReadRefreshToken())
+export default function User() {
+    const [accessToken, setAccessToken] = createSignal<string | null>(null)
+    const [refreshToken, setRefreshToken] = createSignal<string | null>(null)
+    const [userinfoJson, setUserinfoJson] = createSignal<string>('{}')
+    const [subject, setSubject] = createSignal<string>('')
+    const [loading, setLoading] = createSignal(false)
+    const [error, setError] = createSignal<string | null>(null)
+    const [showRawJson, setShowRawJson] = createSignal(false)
+    const [showFullCurl, setShowFullCurl] = createSignal(false)
+    const [curlCopied, setCurlCopied] = createSignal(false)
 
-    // Decode ID token and extract subject
-    try {
-        const token = useIDToken()
-        if (token) {
-            const payload = jwt_decode<IdTokenPayload>(token)
-            if (payload.sub) {
-                setSubject(payload.sub)
-            }
-        }
-    } catch (err) {
-        console.error('Failed to decode ID token:', err)
-    }
-
-    // Fetch user info
-    updateUserinfo()
-})
-
-/**
- * Handle token refresh
- */
-const refresh = async () => {
-    try {
-        setLoading(true)
-        setError(null)
-        await useRefreshToken()
-
-        // Update displayed tokens
-        setAccessToken(useAccessToken())
-        setRefreshToken(useReadRefreshToken())
-
-        // Refresh user info
-        await updateUserinfo()
-    } catch (err) {
-        const message = getErrorMessage(err)
-        setError(`Failed to refresh token: ${message}`)
-        console.error(err)
-    } finally {
-        setLoading(false)
-    }
-}
-
-export default () => {
-    // Parse userinfo JSON once for display
-    const parsedUserinfo = createMemo(() => {
+    const updateProfile = async () => {
         try {
-            return JSON.parse(userinfo()) as Record<string, unknown>
-        } catch {
-            return null
+            setLoading(true)
+            setError(null)
+            const info = await fetchUserInfo()
+            setUserinfoJson(JSON.stringify(info, null, 4))
+        } catch (err) {
+            const message = getErrorMessage(err)
+            setError(`Failed to fetch user info: ${message}`)
+            console.error(err)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    createEffect(() => {
+        setAccessToken(getAccessToken())
+        setRefreshToken(getRefreshToken())
+
+        try {
+            const token = getIDToken()
+            if (token) {
+                const payload = jwt_decode<IdTokenPayload>(token)
+                if (payload.sub) setSubject(payload.sub)
+            }
+        } catch (err) {
+            console.error('Failed to decode ID token:', err)
+        }
+
+        updateProfile()
     })
 
-    // Decode ID token payload for identity summary
-    const idPayload = createMemo(() => {
+    const handleRefresh = async () => {
         try {
-            const token = useIDToken()
+            setLoading(true)
+            setError(null)
+            await refreshAccessToken()
+            setAccessToken(getAccessToken())
+            setRefreshToken(getRefreshToken())
+            await updateProfile()
+        } catch (err) {
+            const message = getErrorMessage(err)
+            setError(`Failed to refresh token: ${message}`)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const idTokenPayload = createMemo(() => {
+        try {
+            const token = getIDToken()
             return token ? jwt_decode<IdTokenPayload>(token) : null
         } catch {
             return null
         }
     })
 
-    const formatTime = (ts?: number) => {
+    const formatTimestamp = (ts?: number) => {
         if (!ts) return '—'
-        const d = new Date(ts * 1000)
-        return `${d.toLocaleString()}`
+        return new Date(ts * 1000).toLocaleString()
     }
 
-    const isExpired = createMemo(() => {
-        const exp = idPayload()?.exp
-        return exp ? exp * 1000 <= Date.now() : false
-    })
-
-    // Toggle for showing raw userinfo JSON modal
-    const [showUserinfoModal, setShowUserinfoModal] = createSignal(false)
-
-    // Build userinfo URL and example curl command
-    const userinfoUrl = createMemo(() => getAuthEndpoints().userinfo)
-    const curlExample = createMemo(() => {
+    const curlCommand = createMemo(() => {
         const token = accessToken() || '<access_token>'
-        return `curl -s -H "Authorization: Bearer ${token}" "${userinfoUrl()}"`
+        const url = getAuthEndpoints().userinfo
+        return `curl -s -H "Authorization: Bearer ${token}" "${url}"`
     })
 
-    // Lightweight recursive JSON viewer
-    const JsonViewer = (props: { data: unknown; depth?: number }) => {
-        const depth = props.depth ?? 0
-        const padClass = `pl-${Math.min(depth * 4, 12)}` // cap indentation
-
-        if (props.data === null) {
-            return <span class='text-gray-400'>null</span>
+    const displayUserinfo = createMemo(() => {
+        const info = JSON.parse(userinfoJson())
+        // If profile data is empty, show the decoded ID token claims instead
+        if (Object.keys(info).length === 0 && idTokenPayload()) {
+            return idTokenPayload()
         }
-
-        const t = typeof props.data
-        if (t === 'string') return <span class='text-green-300'>"{props.data as string}"</span>
-        if (t === 'number') return <span class='text-blue-300'>{props.data as number}</span>
-        if (t === 'boolean') return <span class='text-purple-300'>{(props.data as boolean) ? 'true' : 'false'}</span>
-
-        if (Array.isArray(props.data)) {
-            return (
-                <div class={`${padClass}`}>
-                    <span class='text-gray-300'>[</span>
-                    <div class='pl-4 space-y-1'>
-                        {(props.data as unknown[]).map((item) => (
-                            <div><JsonViewer data={item} depth={(depth + 1)} /></div>
-                        ))}
-                    </div>
-                    <span class='text-gray-300'>]</span>
-                </div>
-            )
-        }
-
-        // Object
-        const obj = props.data as Record<string, unknown>
-        return (
-            <div class={`${padClass}`}>
-                <span class='text-gray-300'>{'{'}</span>
-                <div class='pl-4 space-y-1'>
-                    {Object.keys(obj).map((key) => (
-                        <div class='flex'>
-                            <span class='text-emerald-300'>"{key}"</span>
-                            <span class='text-gray-400 mx-1'>:</span>
-                            <JsonViewer data={obj[key]} depth={(depth + 1)} />
-                        </div>
-                    ))}
-                </div>
-                <span class='text-gray-300'>{'}'}</span>
-            </div>
-        )
-    }
+        return info
+    })
 
     return (
-        <div class='bg-gray-800 p-4 bg-opacity-50 rounded-lg shadow-xl max-w-3xl w-full space-y-6'>
-            {/* Header */}
-            <div>
-                <h2 class='text-xl font-bold text-white'>Account Overview</h2>
-                <p class='text-sm text-gray-300'>Authenticated session details, tokens, and user claims.</p>
-            </div>
+        <div class='w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20'>
+            {/* Header Section */}
+            <header class='flex items-end justify-between mb-12'>
+                <div>
+                    <h2 class='text-2xl font-semibold text-zinc-100 tracking-tight'>Session Profile</h2>
+                    <p class='text-[13px] text-zinc-500 mt-1'>Authenticated as <span class="text-zinc-300 font-mono">{subject()}</span></p>
+                </div>
+                <button
+                    class='text-[11px] font-bold text-zinc-500 hover:text-red-400 uppercase tracking-widest transition-colors'
+                    onClick={performLogout}
+                >
+                    End Session
+                </button>
+            </header>
 
             {error() && (
-                <div class='bg-red-900 bg-opacity-50 border border-red-600 text-red-200 px-4 py-3 rounded-sm mb-4'>
+                <div class='mb-8 p-4 bg-red-950/20 border border-red-900/50 rounded-lg text-red-400 text-sm'>
                     {error()}
                 </div>
             )}
 
-            {/* Identity Summary */}
-            <div class='rounded-sm bg-gray-900 border border-gray-700 p-3'>
-                <div class='flex items-center justify-between'>
-                    <h3 class='text-sm font-semibold text-gray-200'>Identity</h3>
-                    <div class='flex items-center gap-2'>
+            <div class='space-y-12'>
+                {/* Section 1: Identity */}
+                <section>
+                    <div class="flex items-center gap-4 mb-6">
+                        <h3 class='text-[11px] font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap'>Identity Claims</h3>
+                        <div class="h-[1px] w-full bg-zinc-800/50" />
+                    </div>
+                    <div class='grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4'>
+                        <CopyTextInput value={subject()} label='Subject' id='subject' />
+                        <CopyTextInput value={idTokenPayload()?.iss || ''} label='Issuer' id='issuer' />
+                        <CopyTextInput value={formatTimestamp(idTokenPayload()?.exp)} label='Expires' id='exp' />
+                        <CopyTextInput value={formatTimestamp(idTokenPayload()?.iat)} label='Issued' id='iat' />
+                    </div>
+                </section>
+
+                {/* Section 2: Tokens */}
+                <section>
+                    <div class="flex items-center gap-4 mb-6">
+                        <h3 class='text-[11px] font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap'>Security Tokens</h3>
+                        <div class="h-[1px] w-full bg-zinc-800/50" />
                         <button
-                            class='text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded-sm border border-gray-600'
-                            onClick={() => setShowUserinfoModal(true)}
-                        >
-                            Show Raw JSON
-                        </button>
-                        <button
-                            id='logout-btn'
-                            class='text-xs bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-semibold px-3 py-1 rounded-sm transition duration-200'
-                            onClick={useLogout}
+                            class='text-[10px] font-bold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors whitespace-nowrap'
+                            onClick={handleRefresh}
                             disabled={loading()}
                         >
-                            Logout
+                            {loading() ? 'Refreshing...' : 'Refresh'}
                         </button>
                     </div>
-                </div>
-                <div class='mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                    <div>
-                        <CopyTextInput value={subject()} label='Subject (sub)' id='subject' />
-                        <p class='text-xs text-gray-400 mt-1'>Unique user identifier from the ID token.</p>
+                    <div class='space-y-6'>
+                        <TokenDisplay token={accessToken()} label='Access Token' />
+                        <TokenDisplay token={getIDToken()} label='ID Token' />
+                        <TokenDisplay token={refreshToken()} label='Refresh Token' />
                     </div>
-                    <div>
-                        <CopyTextInput value={idPayload()?.iss || ''} label='Issuer (iss)' id='issuer' />
-                        <p class='text-xs text-gray-400 mt-1'>Authorization server that issued the ID token.</p>
-                    </div>
-                    <div>
-                        <CopyTextInput value={formatTime(idPayload()?.exp)} label='Expires (exp)' id='exp' />
-                        <p class='text-xs text-gray-400 mt-1'>When the ID token expires.</p>
-                    </div>
-                    <div>
-                        <CopyTextInput value={formatTime(idPayload()?.iat)} label='Issued At (iat)' id='iat' />
-                        <p class='text-xs text-gray-400 mt-1'>When the ID token was issued.</p>
-                    </div>
-                </div>
-            </div>
+                </section>
 
-            {/* Tokens */}
-            <div class='rounded-sm bg-gray-900 border border-gray-700 p-3 space-y-3'>
-                <div class='flex items-center justify-between'>
-                    <h3 class='text-sm font-semibold text-gray-200'>Tokens</h3>
-                    <button
-                        id='refresh-btn'
-                        class='text-xs bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-semibold px-3 py-1 rounded-sm transition duration-200'
-                        onClick={refresh}
-                        disabled={loading()}
-                    >
-                        {loading() ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                </div>
-                <div>
-                    <CopyTextInput value={accessToken() || ''} label='Access Token' id='access-token' />
-                    <p class='text-xs text-gray-400 mt-1'>Bearer token used to access protected APIs via the Authorization header.</p>
-                </div>
-                <div>
-                    <CopyTextInput value={refreshToken() || ''} label='Refresh Token' id='refresh-token' />
-                    <p class='text-xs text-gray-400 mt-1'>Used to obtain new access tokens without re-authenticating. Keep it secret.</p>
-                </div>
-                <div>
-                    <CopyTextInput value={useIDToken() || ''} label='ID Token' id='id-token' />
-                    <p class='text-xs text-gray-400 mt-1'>JWT containing identity claims about the user (not for API access).</p>
-                </div>
-            </div>
+                {/* Section 3: Profile Data */}
+                <section>
+                    <div class="flex items-center gap-4 mb-6">
+                        <h3 class='text-[11px] font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap'>Profile Data</h3>
+                        <div class="h-[1px] w-full bg-zinc-800/50" />
+                        <button
+                            class='text-[10px] font-bold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors whitespace-nowrap'
+                            onClick={() => setShowRawJson(true)}
+                        >
+                            Raw JSON
+                        </button>
+                    </div>
+                    
+                    <div class='bg-zinc-900/30 p-6 rounded-xl border border-zinc-800/50 backdrop-blur-sm'>
+                        <JsonViewer data={displayUserinfo()} />
+                        <Show when={userinfoJson() === '{}'}>
+                            <p class='text-[10px] text-zinc-600 mt-4 text-center uppercase tracking-widest'>Showing ID Token claims (Profile API returned empty)</p>
+                        </Show>
+                    </div>
 
-            {/* Userinfo */}
-            <div class='rounded-sm bg-gray-900 border border-gray-700 p-3 text-left'>
-                <div class='flex items-center justify-between'>
-                    <h3 class='text-sm font-semibold text-gray-200'>Userinfo</h3>
-                </div>
-                {/* cURL example */}
-                <div class='mt-2'>
-                    <CopyTextInput value={curlExample()} label='cURL (userinfo)' id='curl-userinfo' multiline={true} />
-                    <p class='text-xs text-gray-500 mt-1'>Requests userinfo using Authorization: Bearer access_token.</p>
-                </div>
-            </div>
-
-            {/* Raw JSON Modal */}
-            <Show when={showUserinfoModal()}>
-                <div
-                    class='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
-                    onClick={() => setShowUserinfoModal(false)}
-                >
-                    <div
-                        class='bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden'
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div class='sticky top-0 bg-gray-800 border-b border-gray-700 p-4 flex items-center justify-between'>
-                            <h3 class='text-lg font-bold text-white'>Raw Userinfo JSON</h3>
-                            <button
-                                onClick={() => setShowUserinfoModal(false)}
-                                class='p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm transition'
+                    <div class='mt-8 space-y-3'>
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Terminal Request</h4>
+                            <button 
+                                onClick={() => setShowFullCurl(!showFullCurl())}
+                                class="text-[10px] text-zinc-400 hover:text-zinc-200 underline underline-offset-4"
                             >
-                                <svg class='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12' />
-                                </svg>
+                                {showFullCurl() ? 'Hide full command' : 'Show full command'}
                             </button>
                         </div>
-                        <div class='p-4 overflow-auto max-h-[calc(80vh-80px)] text-left'>
-                            <pre class='font-mono text-sm text-gray-200 whitespace-pre-wrap leading-relaxed bg-gray-900 border border-gray-700 p-4 rounded-sm'>
-                                {userinfo()}
-                            </pre>
+                        
+                        <Show 
+                            when={showFullCurl()} 
+                            fallback={
+                                <div class="bg-zinc-900 border border-zinc-800 rounded px-3 py-2 flex items-center justify-between group">
+                                    <code class="text-[12px] text-zinc-400 font-mono truncate mr-4">
+                                        curl -s -H "Authorization: Bearer {accessToken()?.slice(0, 10)}..." "{getAuthEndpoints().userinfo}"
+                                    </code>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(curlCommand())
+                                            setCurlCopied(true)
+                                            setTimeout(() => setCurlCopied(false), 2000)
+                                        }}
+                                        class={`text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${curlCopied() ? 'text-emerald-400 scale-110' : 'text-zinc-500 group-hover:text-zinc-200'}`}
+                                    >
+                                        {curlCopied() ? '✓ Copied' : 'Copy'}
+                                    </button>
+                                </div>
+                            }
+                        >
+                            <CopyTextInput value={curlCommand()} label='' id='curl-example' multiline={true} />
+                        </Show>
+                    </div>
+                </section>
+            </div>
+
+            {/* Simple Modal */}
+            <Show when={showRawJson()}>
+                <div class='fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6' onClick={() => setShowRawJson(false)}>
+                    <div class='bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300' onClick={e => e.stopPropagation()}>
+                        <div class='p-6 border-b border-zinc-800 flex justify-between items-center'>
+                            <h3 class='text-sm font-bold text-zinc-100 uppercase tracking-widest'>Raw Profile JSON</h3>
+                            <button onClick={() => setShowRawJson(false)} class='text-zinc-500 hover:text-zinc-100'>✕</button>
+                        </div>
+                        <div class='p-6 overflow-auto font-mono text-[13px] text-zinc-400 leading-relaxed'>
+                            <pre>{userinfoJson()}</pre>
                         </div>
                     </div>
                 </div>

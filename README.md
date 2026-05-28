@@ -138,25 +138,25 @@ PKCE (RFC 7636) adds a layer of security to the Authorization Code flow by:
 
 ## Key Functions
 
-### Authentication Hook (`src/hooks/auth.ts`)
+### Authentication Service Layer (`src/hooks/auth.ts`)
 
-- `useLogin()` - Initiate OAuth login flow
-- `useLogout()` - Clear tokens and logout
-- `useRequestTokensByAuthorizationCode(code)` - Exchange authorization code for tokens
-- `useRefreshToken()` - Refresh access token
-- `useUserInfo()` - Fetch user information
-- `useIsLogin()` - Check if user is authenticated
-- `useAccessToken()` - Get current access token
-- `useIDToken()` - Get current ID token
-- `useReadRefreshToken()` - Get current refresh token
+- `performLogin()` - Initiate OAuth login flow
+- `performLogout()` - Clear tokens and logout
+- `exchangeCodeForTokens(code)` - Exchange authorization code for tokens
+- `refreshAccessToken()` - Refresh access token
+- `fetchUserInfo()` - Fetch user information
+- `isUserLoggedIn()` - Check if user is authenticated
+- `getAccessToken()` - Get current access token
+- `getIDToken()` - Get current ID token
+- `getRefreshToken()` - Get current refresh token
 
-### OAuth Client Service (`src/services/oauth-client.ts`)
+### OAuth Client Logic (`src/services/oauth-client.ts`)
 
-- `OAuthClient.getAuthorizationUrl()` - Build authorization URL with PKCE
-- `OAuthClient.exchangeAuthorizationCode()` - Exchange code for tokens
-- `OAuthClient.refreshAccessToken()` - Refresh token
-- `OAuthClient.getUserInfo()` - Fetch userinfo endpoint
-- `OAuthClient.getLogoutUrl()` - Build logout URL
+- `getAuthorizationUrl()` - Build authorization URL with PKCE
+- `exchangeAuthorizationCode()` - Exchange code for tokens
+- `refreshAccessToken()` - Refresh token
+- `getUserInfo()` - Fetch userinfo endpoint
+- `getLogoutUrl()` - Build logout URL
 
 ## Testing with Custom OAuth Servers
 

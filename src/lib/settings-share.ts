@@ -1,44 +1,51 @@
 /**
- * Settings sharing utilities
- * Encode and decode settings to/from base64 for URL sharing
+ * Settings Sharing System
+ * 
+ * This file allows users to share their OAuth configuration with others
+ * by encoding the settings into a URL. When someone clicks the link,
+ * the app reads the URL and automatically fills in the settings.
  */
 
 import type { ShareableSettings, OAuthEndpoints } from '../types'
 
 /**
- * Encode settings to base64 for sharing via URL
+ * Converts a settings object into a scrambled "base64" string.
+ * This makes it safe to put into a URL.
  */
 export function encodeSettings(settings: ShareableSettings): string {
     try {
         const json = JSON.stringify(settings)
-        // Use btoa for browser-safe base64 encoding
+        // btoa() is a built-in browser function that turns text into base64
         return btoa(json)
     } catch (error) {
         console.error('Failed to encode settings:', error)
-        throw new Error('Failed to encode settings for sharing')
+        throw new Error('Failed to prepare settings for sharing')
     }
 }
 
 /**
- * Decode settings from base64 URL parameter
+ * Turns a "base64" string from a URL back into a readable settings object.
  */
 export function decodeSettings(encoded: string): ShareableSettings | null {
     try {
+        // atob() is the opposite of btoa() - it decodes base64 back to text
         const json = atob(encoded)
         const settings = JSON.parse(json) as ShareableSettings
 
-        // Validate the decoded settings
+        // Make sure the data we decoded is actually what we expect
         if (!isValidSettings(settings)) {
-            console.error('Invalid settings structure after decoding')
+            console.error('The shared settings link seems to be broken.')
             return null
         }
 
-        // backward compatibility: if endpoints are not contains server URL, prepend server URL to endpoints
+        // Backward compatibility: Some servers use relative paths for endpoints.
+        // We ensure they are full URLs by prepending the server URL.
         if (settings.endpoints) {
             const { server, endpoints } = settings
             for (const key in endpoints) {
-                if (endpoints[key as keyof OAuthEndpoints] && endpoints[key as keyof OAuthEndpoints].startsWith('/')) {
-                    endpoints[key as keyof OAuthEndpoints] = server + endpoints[key as keyof OAuthEndpoints]
+                const val = endpoints[key as keyof OAuthEndpoints]
+                if (val && val.startsWith('/')) {
+                    endpoints[key as keyof OAuthEndpoints] = server + val
                 }
             }
         }
@@ -51,7 +58,7 @@ export function decodeSettings(encoded: string): ShareableSettings | null {
 }
 
 /**
- * Validate settings structure
+ * Checks if the object has all the required fields for a configuration.
  */
 function isValidSettings(settings: any): settings is ShareableSettings {
     return (
@@ -68,7 +75,8 @@ function isValidSettings(settings: any): settings is ShareableSettings {
 }
 
 /**
- * Generate shareable URL with encoded settings
+ * Creates a full URL (including the current site's address) with the 
+ * settings packed inside a "settings" parameter.
  */
 export function generateShareableUrl(settings: ShareableSettings): string {
     const encoded = encodeSettings(settings)
@@ -78,7 +86,7 @@ export function generateShareableUrl(settings: ShareableSettings): string {
 }
 
 /**
- * Read settings from current URL query string
+ * Looks at the browser's current URL to see if it contains shared settings.
  */
 export function readSettingsFromUrl(): ShareableSettings | null {
     try {
@@ -91,13 +99,14 @@ export function readSettingsFromUrl(): ShareableSettings | null {
 
         return decodeSettings(encoded)
     } catch (error) {
-        console.error('Failed to read settings from URL:', error)
+        console.error('Could not read settings from the URL:', error)
         return null
     }
 }
 
 /**
- * Clear settings parameter from URL without page reload
+ * Removes the settings from the browser's address bar after they've been
+ * loaded, so the URL looks "clean" again.
  */
 export function clearSettingsFromUrl(): void {
     try {
@@ -105,6 +114,6 @@ export function clearSettingsFromUrl(): void {
         url.searchParams.delete('settings')
         window.history.replaceState({}, '', url.toString())
     } catch (error) {
-        console.error('Failed to clear settings from URL:', error)
+        console.error('Could not clean up the URL:', error)
     }
 }

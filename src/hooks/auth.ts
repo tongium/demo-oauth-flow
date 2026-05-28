@@ -1,24 +1,37 @@
-import { OAuthClient } from '../services/oauth-client'
+/**
+ * Authentication Service Layer
+ * 
+ * This file provides the primary functions used by the UI to interact with
+ * the authentication system. It manages configuration, token storage, and
+ * high-level actions like "Login" and "Logout".
+ */
+
+import * as OAuthLogic from '../services/oauth-client'
 import { OAUTH_CONFIG, getRedirectUrl, getPostLogoutRedirectURL } from '../config/oauth'
 import { StorageKeys, storage } from '../lib/storage'
 import { OAuthError, getErrorMessage } from '../lib/errors'
 import type { OAuthConfig, OAuthEndpoints, ShareableSettings, TokenPayload } from '../types'
 import { readSettingsFromUrl, clearSettingsFromUrl } from '../lib/settings-share'
 
-// Export for backward compatibility
-export const CALLBACK_URL = getRedirectUrl()
-
+/**
+ * --------------------------------------------------------------------------
+ * SECTION 1: STORAGE & CLEANUP
+ * --------------------------------------------------------------------------
+ */
 
 /**
- * Clear all authentication data
+ * Completely clears all authentication-related data from the browser.
  */
-export const cleanup = () => {
+export const clearAllAuthData = () => {
     storage.clearAuth()
 }
 
 /**
- * Configuration management
+ * --------------------------------------------------------------------------
+ * SECTION 2: CONFIGURATION MANAGEMENT
+ * --------------------------------------------------------------------------
  */
+
 export const setAuthServer = (server: string) => {
     storage.save(StorageKeys.SERVER, server)
 }
@@ -44,7 +57,7 @@ export const getAuthScope = (): string => {
 }
 
 /**
- * Endpoint configuration management
+ * Manages the specific URLs (endpoints) for the OAuth server.
  */
 export const setAuthEndpoints = (endpoints: OAuthEndpoints) => {
     storage.save(StorageKeys.ENDPOINT_AUTHORIZATION, endpoints.authorization)
@@ -54,7 +67,11 @@ export const setAuthEndpoints = (endpoints: OAuthEndpoints) => {
     storage.save(StorageKeys.ENDPOINT_REVOKE, endpoints.revoke)
 }
 
-export const getDefaultEndpoints = async (server: string): Promise<OAuthEndpoints> => {
+/**
+ * Fetches default endpoint configuration from a server's 
+ * .well-known/openid-configuration endpoint.
+ */
+export const fetchDefaultEndpoints = async (server: string): Promise<OAuthEndpoints> => {
     const response = await fetch(server + '/.well-known/openid-configuration')
     if (!response.ok) {
         throw new OAuthError(`Failed to fetch OIDC configuration: ${response.status} ${response.statusText}`, 'OIDC_CONFIG_ERROR', response.status)
@@ -72,7 +89,7 @@ export const getDefaultEndpoints = async (server: string): Promise<OAuthEndpoint
 let cachedEndpoints: OAuthEndpoints | null = null
 export const loadCachedEndpoints = async (): Promise<OAuthEndpoints> => {
     if (!cachedEndpoints) {
-        cachedEndpoints = await getDefaultEndpoints(getAuthServer())
+        cachedEndpoints = await fetchDefaultEndpoints(getAuthServer())
     }
 
     return cachedEndpoints
@@ -89,7 +106,7 @@ export const getAuthEndpoints = (): OAuthEndpoints => {
 }
 
 /**
- * Import all settings from shareable settings object
+ * Import/Export all settings at once (e.g., from/to a URL).
  */
 export const importSettings = (settings: ShareableSettings) => {
     setAuthServer(settings.server)
@@ -98,9 +115,6 @@ export const importSettings = (settings: ShareableSettings) => {
     setAuthEndpoints(settings.endpoints)
 }
 
-/**
- * Export all settings as shareable settings object
- */
 export const exportSettings = (): ShareableSettings => {
     return {
         server: getAuthServer(),
@@ -111,9 +125,9 @@ export const exportSettings = (): ShareableSettings => {
 }
 
 /**
- * Initialize settings from URL query string if present
+ * Looks at the URL to see if it contains settings shared by someone else.
  */
-export const initializeFromUrl = () => {
+export const initializeSettingsFromUrl = () => {
     const settings = readSettingsFromUrl()
     if (settings) {
         importSettings(settings)
@@ -124,9 +138,9 @@ export const initializeFromUrl = () => {
 }
 
 /**
- * Get current OAuth configuration
+ * Helper to get the full current OAuth configuration object.
  */
-const getOAuthConfig = (): OAuthConfig => ({
+const getCurrentOAuthConfig = (): OAuthConfig => ({
     server: getAuthServer(),
     clientId: getAuthClientID(),
     scope: getAuthScope(),
@@ -134,9 +148,15 @@ const getOAuthConfig = (): OAuthConfig => ({
 })
 
 /**
- * Persist OAuth tokens to storage
+ * --------------------------------------------------------------------------
+ * SECTION 3: TOKEN MANAGEMENT
+ * --------------------------------------------------------------------------
  */
-const saveTokens = (tokens: TokenPayload): void => {
+
+/**
+ * Saves all received tokens to browser storage.
+ */
+const saveTokensToStorage = (tokens: TokenPayload): void => {
     storage.save(StorageKeys.ACCESS_TOKEN, tokens.access_token)
     storage.save(StorageKeys.ID_TOKEN, tokens.id_token)
     storage.save(StorageKeys.REFRESH_TOKEN, tokens.refresh_token)
@@ -144,9 +164,9 @@ const saveTokens = (tokens: TokenPayload): void => {
 }
 
 /**
- * Clear persisted OAuth tokens from storage
+ * Removes all tokens from browser storage.
  */
-export const clearTokens = (): void => {
+export const clearTokensFromStorage = (): void => {
     storage.remove(StorageKeys.ACCESS_TOKEN)
     storage.remove(StorageKeys.ID_TOKEN)
     storage.remove(StorageKeys.REFRESH_TOKEN)
@@ -154,79 +174,68 @@ export const clearTokens = (): void => {
 }
 
 /**
- * Token getters
+ * Helpers to get specific tokens from storage.
  */
-export const useIDToken = (): string | null => {
+export const getIDToken = (): string | null => {
     return storage.get(StorageKeys.ID_TOKEN)
 }
 
-export const useAccessToken = (): string | null => {
+export const getAccessToken = (): string | null => {
     return storage.get(StorageKeys.ACCESS_TOKEN)
 }
 
-export const useReadRefreshToken = (): string | null => {
+export const getRefreshToken = (): string | null => {
     return storage.get(StorageKeys.REFRESH_TOKEN)
 }
 
 /**
- * Initiate OAuth login flow
- * Redirects to authorization server
+ * --------------------------------------------------------------------------
+ * SECTION 4: AUTHENTICATION ACTIONS
+ * --------------------------------------------------------------------------
  */
-export const useLogin = () => {
-    try {
-        const config = getOAuthConfig()
-        const { url } = OAuthClient.getAuthorizationUrl(config)
-        location.href = url
-    } catch (error) {
-        const message = getErrorMessage(error)
-        alert(`Failed to initiate login: ${message}`)
-    }
+
+/**
+ * Starts the login process by redirecting the user to the auth server.
+ */
+export const performLogin = () => {
+    const config = getCurrentOAuthConfig()
+    const { url } = OAuthLogic.getAuthorizationUrl(config)
+    location.href = url
 }
 
 /**
- * Logout and redirect to authorization server logout endpoint
+ * Logs the user out locally and redirects them to the auth server's logout page.
  */
-export const useLogout = () => {
-    try {
-        const idToken = storage.get(StorageKeys.ID_TOKEN)
-        const config = getOAuthConfig()
-        const logoutUrl = OAuthClient.getLogoutUrl(config, idToken, getPostLogoutRedirectURL())
-        location.href = logoutUrl
-    } catch (error) {
-        const message = getErrorMessage(error)
-        alert(`Failed to logout: ${message}`)
-    }
+export const performLogout = () => {
+    const idToken = storage.get(StorageKeys.ID_TOKEN)
+    const config = getCurrentOAuthConfig()
+    const logoutUrl = OAuthLogic.getLogoutUrl(config, idToken, getPostLogoutRedirectURL())
+    location.href = logoutUrl
 }
 
 /**
- * Exchange authorization code for tokens
- * Called from the callback route after OAuth redirect
+ * After login redirect, this exchanges the "code" in the URL for actual tokens.
  */
-export const useRequestTokensByAuthorizationCode = async (code: string): Promise<void> => {
-    try {
-        const config = getOAuthConfig()
-        const tokens = await OAuthClient.exchangeAuthorizationCode(code, config)
-        saveTokens(tokens)
-    } catch (error) {
-        const message = getErrorMessage(error)
-        alert(`Token exchange failed: ${message}`)
-    }
+export const exchangeCodeForTokens = async (code: string): Promise<void> => {
+    const config = getCurrentOAuthConfig()
+    const tokens = await OAuthLogic.exchangeAuthorizationCode(code, config)
+    saveTokensToStorage(tokens)
 }
 
 /**
- * Refresh access token using refresh token
+ * Uses a refresh token to get a fresh access token without user interaction.
  */
-export const useRefreshToken = async (): Promise<void> => {
+export const refreshAccessToken = async (): Promise<void> => {
     try {
-        const config = getOAuthConfig()
+        const config = getCurrentOAuthConfig()
         const refreshToken = storage.get(StorageKeys.REFRESH_TOKEN)
 
         if (!refreshToken) {
             throw new Error('No refresh token available')
         }
 
-        const tokens = await OAuthClient.refreshAccessToken(config, refreshToken)
-        saveTokens(tokens)
+        const tokens = await OAuthLogic.refreshAccessToken(config, refreshToken)
+        saveTokensToStorage(tokens)
     } catch (error) {
         const message = getErrorMessage(error)
         console.error(`Token refresh failed: ${message}`)
@@ -235,11 +244,11 @@ export const useRefreshToken = async (): Promise<void> => {
 }
 
 /**
- * Fetch user information from userinfo endpoint
+ * Fetches the user's profile information from the server.
  */
-export const useUserInfo = async (): Promise<object> => {
+export const fetchUserInfo = async (): Promise<object> => {
     try {
-        const config = getOAuthConfig()
+        const config = getCurrentOAuthConfig()
         const accessToken = storage.get(StorageKeys.ACCESS_TOKEN)
         const tokenType = storage.get(StorageKeys.TOKEN_TYPE) || 'Bearer'
 
@@ -247,7 +256,7 @@ export const useUserInfo = async (): Promise<object> => {
             throw new Error('No access token available')
         }
 
-        return await OAuthClient.getUserInfo(config, accessToken, tokenType)
+        return await OAuthLogic.getUserInfo(config, accessToken, tokenType)
     } catch (error) {
         const message = getErrorMessage(error)
         console.error(`Failed to fetch user info: ${message}`)
@@ -256,45 +265,37 @@ export const useUserInfo = async (): Promise<object> => {
 }
 
 /**
- * Revoke the current refresh token
+ * Tells the server that the refresh token should no longer be valid.
  */
-export const useRevokeRefreshToken = async (): Promise<void> => {
-    try {
-        const config = getOAuthConfig()
-        const refreshToken = storage.get(StorageKeys.REFRESH_TOKEN)
+export const revokeRefreshToken = async (): Promise<void> => {
+    const config = getCurrentOAuthConfig()
+    const refreshToken = storage.get(StorageKeys.REFRESH_TOKEN)
 
-        if (!refreshToken) {
-            throw new Error('No refresh token available')
-        }
-
-        await OAuthClient.revokeToken(config, refreshToken, 'refresh_token')
-        clearTokens()
-    } catch (error) {
-        const message = getErrorMessage(error)
-        alert(`Revoke tokens failed: ${message}`)
+    if (!refreshToken) {
+        throw new Error('No refresh token available')
     }
+
+    await OAuthLogic.revokeToken(config, refreshToken, 'refresh_token')
+    clearTokensFromStorage()
 }
 
 /**
- * Check if user is currently logged in
- * Validates by calling /userinfo with the stored access token.
- * Returns true on success; on failure, clears tokens and returns false.
+ * Checks if the user is currently logged in by trying to fetch their info.
  */
-export const useIsLoginAsync = async (): Promise<boolean> => {
+export const isUserLoggedIn = async (): Promise<boolean> => {
     try {
-        const config = getOAuthConfig()
+        const config = getCurrentOAuthConfig()
         const accessToken = storage.get(StorageKeys.ACCESS_TOKEN)
         const tokenType = storage.get(StorageKeys.TOKEN_TYPE) || 'Bearer'
+        
         if (!accessToken) return false
-        await OAuthClient.getUserInfo(config, accessToken, tokenType)
+        
+        // If we can get user info, we are definitely logged in
+        await OAuthLogic.getUserInfo(config, accessToken, tokenType)
         return true
     } catch {
-        clearTokens()
+        // If it fails, assume the token is invalid and clear it
+        clearTokensFromStorage()
         return false
     }
 }
-
-/**
- * @deprecated Use useIsLoginAsync() instead.
- */
-export const useIsLogin = useIsLoginAsync

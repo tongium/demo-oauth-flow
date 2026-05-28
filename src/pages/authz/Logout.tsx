@@ -1,17 +1,25 @@
 import { createEffect } from 'solid-js'
-import { useRevokeRefreshToken } from '../../hooks/auth'
+import { revokeRefreshToken } from '../../hooks/auth'
 
-export default () => {
-    // Handle OAuth callback in effect hook, not at module level
+/**
+ * OAuth Logout Callback Page
+ * 
+ * After the user logs out at the server, they might be redirected here.
+ * we take this opportunity to clean up any remaining tokens on our side.
+ */
+export default function Logout() {
     createEffect(async () => {
-        await useRevokeRefreshToken()
+        // Tell the server we are done with our refresh token
+        await revokeRefreshToken()
+
+        // Go back to the home page
         location.href = import.meta.env.VITE_BASE_URL
     })
 
     return (
         <div class='text-center'>
-            <p class='text-gray-400'>Processing OAuth callback...</p>
-            <p class='text-sm text-gray-500 mt-2'>You will be redirected shortly.</p>
+            <p class='text-gray-400 font-medium'>Logging you out safely...</p>
+            <p class='text-sm text-gray-500 mt-2'>Redirecting you shortly.</p>
         </div>
     )
 }
