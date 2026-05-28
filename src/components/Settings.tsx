@@ -11,6 +11,7 @@ import {
     useLogin,
     exportSettings,
     initializeFromUrl,
+    getDefaultEndpoints,
 } from '../hooks/auth'
 import { generateShareableUrl } from '../lib/settings-share'
 import { getRedirectUrl, getPostLogoutRedirectURL, OAUTH_CONFIG } from '../config/oauth'
@@ -223,7 +224,7 @@ export default () => {
                                 Custom Endpoints
                             </h3>
                             <p class='text-xs text-gray-400 mb-3'>
-                                Override default OAuth2 endpoint paths. Leave as default unless your server uses different paths.
+                                Override endpoint from <code>/.well-known/openid-configuration</code>. Leave as default unless your server uses different.
                             </p>
                             <div class='space-y-3'>
                                 <TextInput
@@ -259,58 +260,17 @@ export default () => {
                             </div>
                         </section>
 
-                        {/* Computed URLs Preview */}
-                        <section>
-                            <h3 class='text-sm font-semibold text-gray-300 mb-3 flex items-center'>
-                                <span class='w-2 h-2 bg-purple-400 rounded-full mr-2' />
-                                Computed URLs
-                            </h3>
-                            <div class='space-y-2'>
-                                <CopyTextInput
-                                    value={server() + endpoints().authorization}
-                                    label='Authorization URL'
-                                    id='sidebar-auth-url'
-                                />
-                                <CopyTextInput
-                                    value={server() + endpoints().token}
-                                    label='Token URL'
-                                    id='sidebar-token-url'
-                                />
-                                <CopyTextInput
-                                    value={server() + endpoints().userinfo}
-                                    label='Userinfo URL'
-                                    id='sidebar-userinfo-url'
-                                />
-                                <CopyTextInput
-                                    value={server() + endpoints().logout}
-                                    label='Logout URL'
-                                    id='sidebar-logout-url'
-                                />
-                                <CopyTextInput
-                                    value={server() + endpoints().revoke}
-                                    label='Revoke URL'
-                                    id='sidebar-revoke-url'
-                                />
-                            </div>
-                        </section>
-
                         {/* Reset to Defaults */}
                         <section class='pt-4 border-t border-gray-700'>
                             <button
                                 class='w-full py-2 bg-red-900 bg-opacity-30 hover:bg-opacity-50 text-red-400 font-medium rounded-sm border border-red-600 transition duration-200'
-                                onClick={() => {
+                                onClick={async () => {
                                     if (confirm('Reset all settings to default configuration?')) {
                                         // Reset to default config values
                                         const defaultServer = OAUTH_CONFIG.DEFAULT_SERVER
                                         const defaultClientID = OAUTH_CONFIG.DEFAULT_CLIENT_ID
                                         const defaultScope = OAUTH_CONFIG.DEFAULT_SCOPE
-                                        const defaultEndpoints: OAuthEndpoints = {
-                                            authorization: OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION,
-                                            token: OAUTH_CONFIG.ENDPOINTS.TOKEN,
-                                            userinfo: OAUTH_CONFIG.ENDPOINTS.USERINFO,
-                                            logout: OAUTH_CONFIG.ENDPOINTS.LOGOUT,
-                                            revoke: OAUTH_CONFIG.ENDPOINTS.REVOKE
-                                        }
+                                        const defaultEndpoints = await getDefaultEndpoints(defaultServer)
 
                                         // Update state
                                         setServer(defaultServer)

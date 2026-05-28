@@ -45,7 +45,7 @@ export interface OAuthConfig {
     server: string
     clientId: string
     scope: string
-    endpoints?: OAuthEndpoints
+    endpoints: OAuthEndpoints
 }
 
 export interface AuthState {

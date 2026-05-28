@@ -114,7 +114,7 @@ export default () => {
     const [showUserinfoModal, setShowUserinfoModal] = createSignal(false)
 
     // Build userinfo URL and example curl command
-    const userinfoUrl = createMemo(() => `${getAuthServer()}${getAuthEndpoints().userinfo}`)
+    const userinfoUrl = createMemo(() => getAuthEndpoints().userinfo)
     const curlExample = createMemo(() => {
         const token = accessToken() || '<access_token>'
         return `curl -s -H "Authorization: Bearer ${token}" "${userinfoUrl()}"`

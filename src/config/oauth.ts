@@ -14,15 +14,6 @@ export const OAUTH_CONFIG = {
     // Base URL for this application
     BASE_URL,
 
-    // OAuth endpoints (relative to server)
-    ENDPOINTS: {
-        AUTHORIZATION: '/oauth2/auth',
-        TOKEN: '/oauth2/token',
-        USERINFO: '/userinfo',
-        LOGOUT: '/oauth2/sessions/logout',
-        REVOKE: '/oauth2/revoke'
-    },
-
     // Callback URL for OAuth redirect
     REDIRECT_PATH: '/authz/callback',
     POST_LOGOUT_REDIRECT_PATH: '/authz/logout',
@@ -38,7 +29,3 @@ export const OAUTH_CONFIG = {
 export const getRedirectUrl = () => BASE_URL + OAUTH_CONFIG.REDIRECT_PATH
 export const getPostLogoutRedirectURL = () => BASE_URL + OAUTH_CONFIG.POST_LOGOUT_REDIRECT_PATH
 
-export const getAuthUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
-export const getTokenUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.TOKEN
-export const getUserinfoUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.USERINFO
-export const getLogoutUrl = (server: string) => server + OAUTH_CONFIG.ENDPOINTS.LOGOUT

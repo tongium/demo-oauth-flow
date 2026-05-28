@@ -1,4 +1,3 @@
-import jwt_decode from 'jwt-decode'
 import { OAuthClient } from '../services/oauth-client'
 import { OAUTH_CONFIG, getRedirectUrl, getPostLogoutRedirectURL } from '../config/oauth'
 import { StorageKeys, storage } from '../lib/storage'
@@ -8,10 +7,7 @@ import { readSettingsFromUrl, clearSettingsFromUrl } from '../lib/settings-share
 
 // Export for backward compatibility
 export const CALLBACK_URL = getRedirectUrl()
-export const AUTHORIZATION_PATH = OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
-export const TOKEN_PATH = OAUTH_CONFIG.ENDPOINTS.TOKEN
-export const USERINFO_PATH = OAUTH_CONFIG.ENDPOINTS.USERINFO
-export const LOGOUT_PATH = OAUTH_CONFIG.ENDPOINTS.LOGOUT
+
 
 /**
  * Clear all authentication data
@@ -58,13 +54,37 @@ export const setAuthEndpoints = (endpoints: OAuthEndpoints) => {
     storage.save(StorageKeys.ENDPOINT_REVOKE, endpoints.revoke)
 }
 
+export const getDefaultEndpoints = async (server: string): Promise<OAuthEndpoints> => {
+    const response = await fetch(server + '/.well-known/openid-configuration')
+    if (!response.ok) {
+        throw new OAuthError(`Failed to fetch OIDC configuration: ${response.status} ${response.statusText}`, 'OIDC_CONFIG_ERROR', response.status)
+    }
+    const config = await response.json()
+    return {
+        authorization: config.authorization_endpoint,
+        token: config.token_endpoint,
+        userinfo: config.userinfo_endpoint,
+        logout: config.end_session_endpoint,
+        revoke: config.revocation_endpoint,
+    }
+}
+
+let cachedEndpoints: OAuthEndpoints | null = null
+export const loadCachedEndpoints = async (): Promise<OAuthEndpoints> => {
+    if (!cachedEndpoints) {
+        cachedEndpoints = await getDefaultEndpoints(getAuthServer())
+    }
+
+    return cachedEndpoints
+}
+
 export const getAuthEndpoints = (): OAuthEndpoints => {
     return {
-        authorization: storage.get(StorageKeys.ENDPOINT_AUTHORIZATION) || OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION,
-        token: storage.get(StorageKeys.ENDPOINT_TOKEN) || OAUTH_CONFIG.ENDPOINTS.TOKEN,
-        userinfo: storage.get(StorageKeys.ENDPOINT_USERINFO) || OAUTH_CONFIG.ENDPOINTS.USERINFO,
-        logout: storage.get(StorageKeys.ENDPOINT_LOGOUT) || OAUTH_CONFIG.ENDPOINTS.LOGOUT,
-        revoke: storage.get(StorageKeys.ENDPOINT_REVOKE) || OAUTH_CONFIG.ENDPOINTS.REVOKE,
+        authorization: storage.get(StorageKeys.ENDPOINT_AUTHORIZATION) || cachedEndpoints?.authorization || 'N/A',
+        token: storage.get(StorageKeys.ENDPOINT_TOKEN) || cachedEndpoints?.token || 'N/A',
+        userinfo: storage.get(StorageKeys.ENDPOINT_USERINFO) || cachedEndpoints?.userinfo || 'N/A',
+        logout: storage.get(StorageKeys.ENDPOINT_LOGOUT) || cachedEndpoints?.logout || 'N/A',
+        revoke: storage.get(StorageKeys.ENDPOINT_REVOKE) || cachedEndpoints?.revoke || 'N/A',
     }
 }
 

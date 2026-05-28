@@ -14,7 +14,7 @@ export class OAuthClient {
      * Get full authorization URL for redirecting user to OAuth server
      */
     static getAuthorizationUrl(config: OAuthConfig): { url: string; pkce: { verifier: string; challenge: string }; state: string } {
-        const { server, clientId, scope, endpoints } = config
+        const { clientId, scope, endpoints } = config
         const pkce = generatePKCEPair(OAUTH_CONFIG.PKCE.CHALLENGE_LENGTH)
         const state = generateState(OAUTH_CONFIG.PKCE.STATE_LENGTH)
 
@@ -23,8 +23,8 @@ export class OAuthClient {
         storage.save(StorageKeys.STATE, state)
 
         // Use custom endpoint if provided, otherwise use default
-        const authEndpoint = endpoints?.authorization || OAUTH_CONFIG.ENDPOINTS.AUTHORIZATION
-        const url = new URL(server + authEndpoint)
+        const authEndpoint = endpoints.authorization
+        const url = new URL(authEndpoint)
         url.searchParams.append('client_id', clientId)
         url.searchParams.append('redirect_uri', getRedirectUrl())
         url.searchParams.append('response_type', 'code')
@@ -55,9 +55,9 @@ export class OAuthClient {
         data.set('code_verifier', challenge)
         data.set('redirect_uri', getRedirectUrl())
 
-        const tokenEndpoint = config.endpoints?.token || OAUTH_CONFIG.ENDPOINTS.TOKEN
+        const tokenEndpoint = config.endpoints.token
         try {
-            const response = await fetch(config.server + tokenEndpoint, {
+            const response = await fetch(tokenEndpoint, {
                 method: 'POST',
                 body: data,
                 headers: {
@@ -103,9 +103,9 @@ export class OAuthClient {
         data.set('client_id', config.clientId)
         data.set('refresh_token', refreshToken)
 
-        const tokenEndpoint = config.endpoints?.token || OAUTH_CONFIG.ENDPOINTS.TOKEN
+        const tokenEndpoint = config.endpoints.token
         try {
-            const response = await fetch(config.server + tokenEndpoint, {
+            const response = await fetch(tokenEndpoint, {
                 method: 'POST',
                 body: data,
                 headers: {
@@ -139,9 +139,9 @@ export class OAuthClient {
             throw new ValidationError('No access token available')
         }
 
-        const userinfoEndpoint = config.endpoints?.userinfo || OAUTH_CONFIG.ENDPOINTS.USERINFO
+        const userinfoEndpoint = config.endpoints.userinfo
         try {
-            const response = await fetch(config.server + userinfoEndpoint, {
+            const response = await fetch(userinfoEndpoint, {
                 method: 'GET',
                 headers: {
                     Authorization: `${tokenType} ${accessToken}`,
@@ -167,8 +167,8 @@ export class OAuthClient {
      * Build logout URL
      */
     static getLogoutUrl(config: OAuthConfig, idToken: string | null, redirectUri: string): string {
-        const logoutEndpoint = config.endpoints?.logout || OAUTH_CONFIG.ENDPOINTS.LOGOUT
-        const url = new URL(config.server + logoutEndpoint)
+        const logoutEndpoint = config.endpoints.logout
+        const url = new URL(logoutEndpoint)
 
         if (idToken) {
             url.searchParams.append('post_logout_redirect_uri', redirectUri)
@@ -199,9 +199,9 @@ export class OAuthClient {
             data.set('token_type_hint', tokenTypeHint)
         }
 
-        const revokeEndpoint = config.endpoints?.revoke || OAUTH_CONFIG.ENDPOINTS.REVOKE
+        const revokeEndpoint = config.endpoints.revoke
         try {
-            const response = await fetch(config.server + revokeEndpoint, {
+            const response = await fetch(revokeEndpoint, {
                 method: 'POST',
                 body: data,
                 headers: {
