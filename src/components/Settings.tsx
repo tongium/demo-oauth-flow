@@ -10,7 +10,7 @@ import {
     setAuthEndpoints,
     performLogin,
     exportSettings,
-    initializeSettingsFromUrl,
+    initializeAuthSettings,
     fetchDefaultEndpoints,
 } from '../hooks/auth'
 import { generateShareableUrl } from '../lib/settings-share'
@@ -34,13 +34,15 @@ export default function Settings() {
     const [sidebarOpen, setSidebarOpen] = createSignal(false)
     const [shareUrl, setShareUrl] = createSignal<string | null>(null)
 
-    onMount(() => {
-        const loaded = initializeSettingsFromUrl()
-        if (loaded) {
+    onMount(async () => {
+        try {
+            await initializeAuthSettings()
             setServer(getAuthServer())
             setClientID(getAuthClientID())
             setScope(getAuthScope())
             setEndpoints(getAuthEndpoints())
+        } catch (error) {
+            console.warn('Could not initialize settings from server defaults.', error)
         }
     })
 

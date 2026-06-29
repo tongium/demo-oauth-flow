@@ -95,6 +95,16 @@ export const loadCachedEndpoints = async (): Promise<OAuthEndpoints> => {
     return cachedEndpoints
 }
 
+const hasStoredEndpoints = (): boolean => {
+    return Boolean(
+        storage.get(StorageKeys.ENDPOINT_AUTHORIZATION) &&
+        storage.get(StorageKeys.ENDPOINT_TOKEN) &&
+        storage.get(StorageKeys.ENDPOINT_USERINFO) &&
+        storage.get(StorageKeys.ENDPOINT_LOGOUT) &&
+        storage.get(StorageKeys.ENDPOINT_REVOKE),
+    )
+}
+
 export const getAuthEndpoints = (): OAuthEndpoints => {
     return {
         authorization: storage.get(StorageKeys.ENDPOINT_AUTHORIZATION) || cachedEndpoints?.authorization || 'N/A',
@@ -135,6 +145,25 @@ export const initializeSettingsFromUrl = () => {
         return true
     }
     return false
+}
+
+let initializeSettingsPromise: Promise<void> | null = null
+export const initializeAuthSettings = async (): Promise<void> => {
+    if (!initializeSettingsPromise) {
+        initializeSettingsPromise = (async () => {
+            const loadedFromUrl = initializeSettingsFromUrl()
+            if (loadedFromUrl || hasStoredEndpoints()) {
+                return
+            }
+
+            const endpoints = await loadCachedEndpoints()
+            setAuthEndpoints(endpoints)
+        })().finally(() => {
+            initializeSettingsPromise = null
+        })
+    }
+
+    return initializeSettingsPromise
 }
 
 /**
@@ -197,7 +226,8 @@ export const getRefreshToken = (): string | null => {
 /**
  * Starts the login process by redirecting the user to the auth server.
  */
-export const performLogin = () => {
+export const performLogin = async () => {
+    await initializeAuthSettings()
     const config = getCurrentOAuthConfig()
     const { url } = OAuthLogic.getAuthorizationUrl(config)
     location.href = url
