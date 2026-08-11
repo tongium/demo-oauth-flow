@@ -121,6 +121,7 @@ function TokenDisplay(props: { token: string | null; label: string }) {
  */
 export default function User() {
     const [accessToken, setAccessToken] = createSignal<string | null>(null)
+    const [idToken, setIdToken] = createSignal<string | null>(null)
     const [refreshToken, setRefreshToken] = createSignal<string | null>(null)
     const [userinfoJson, setUserinfoJson] = createSignal<string>('{}')
     const [subject, setSubject] = createSignal<string>('')
@@ -147,10 +148,11 @@ export default function User() {
 
     createEffect(() => {
         setAccessToken(getAccessToken())
+        setIdToken(getIDToken())
         setRefreshToken(getRefreshToken())
 
         try {
-            const token = getIDToken()
+            const token = idToken()
             if (token) {
                 const payload = jwt_decode<IdTokenPayload>(token)
                 if (payload.sub) setSubject(payload.sub)
@@ -168,7 +170,15 @@ export default function User() {
             setError(null)
             await refreshAccessToken()
             setAccessToken(getAccessToken())
+            setIdToken(getIDToken())
             setRefreshToken(getRefreshToken())
+            const token = getIDToken()
+            if (token) {
+                const payload = jwt_decode<IdTokenPayload>(token)
+                setSubject(payload.sub || '')
+            } else {
+                setSubject('')
+            }
             await updateProfile()
         } catch (err) {
             const message = getErrorMessage(err)
@@ -180,7 +190,7 @@ export default function User() {
 
     const idTokenPayload = createMemo(() => {
         try {
-            const token = getIDToken()
+            const token = idToken()
             return token ? jwt_decode<IdTokenPayload>(token) : null
         } catch {
             return null
@@ -259,7 +269,7 @@ export default function User() {
                     </div>
                     <div class='space-y-6'>
                         <TokenDisplay token={accessToken()} label='Access Token' />
-                        <TokenDisplay token={getIDToken()} label='ID Token' />
+                        <TokenDisplay token={idToken()} label='ID Token' />
                         <TokenDisplay token={refreshToken()} label='Refresh Token' />
                     </div>
                 </section>
