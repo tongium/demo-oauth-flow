@@ -209,12 +209,17 @@ export default function User() {
     })
 
     const displayUserinfo = createMemo(() => {
-        const info = JSON.parse(userinfoJson())
-        // If profile data is empty, show the decoded ID token claims instead
-        if (Object.keys(info).length === 0 && idTokenPayload()) {
-            return idTokenPayload()
+        try {
+            const info = JSON.parse(userinfoJson())
+            // If profile data is empty, show the decoded ID token claims instead
+            if (Object.keys(info).length === 0 && idTokenPayload()) {
+                return idTokenPayload()
+            }
+            return info
+        } catch (err) {
+            console.error('Failed to parse userinfo JSON:', err)
+            return idTokenPayload() || {}
         }
-        return info
     })
 
     return (
