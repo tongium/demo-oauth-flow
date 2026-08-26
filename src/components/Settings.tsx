@@ -141,7 +141,7 @@ export default function Settings() {
                         Share
                     </button>
                     <button
-                        data-testid='settings-start-login-flow'
+                        data-testid='start-login-flow'
                         class='flex-1 py-3.5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-lg shadow-lg transform active:scale-[0.98] transition-all text-sm uppercase tracking-wide'
                         onClick={performLogin}
                     >

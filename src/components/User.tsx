@@ -234,7 +234,7 @@ export default function User() {
                     <p class='text-[13px] text-zinc-500 mt-1'>Authenticated as <span class="text-zinc-300 font-mono">{subject()}</span></p>
                 </div>
                 <button
-                    data-testid='user-end-session'
+                    data-testid='end-session'
                     class='text-[11px] font-bold text-zinc-500 hover:text-red-400 uppercase tracking-widest transition-colors'
                     onClick={performLogout}
                 >
