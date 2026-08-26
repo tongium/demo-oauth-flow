@@ -66,6 +66,7 @@ export default function JsonViewer(props: JsonViewerProps) {
         }>
         <div class="font-mono text-[13px] leading-6 group/item">
             <div 
+                data-testid='json-viewer-toggle'
                 class={`flex items-center gap-2 cursor-pointer transition-colors ${isEmpty() ? 'cursor-default' : 'hover:text-zinc-100'}`}
                 onClick={isEmpty() ? undefined : toggleCollapse}
             >

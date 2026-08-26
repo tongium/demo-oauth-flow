@@ -38,6 +38,7 @@ function TokenDisplay(props: { token: string | null; label: string }) {
 
     const CopyButton = () => (
         <button 
+            data-testid={`copy-token-${props.label.toLowerCase().replace(/\s+/g, '-')}`}
             onClick={copy} 
             class={`absolute top-2 right-2 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${justCopied() ? 'text-emerald-400 opacity-100' : 'text-zinc-500 opacity-0 group-hover/box:opacity-100 hover:text-zinc-200'}`}
         >
@@ -62,6 +63,7 @@ function TokenDisplay(props: { token: string | null; label: string }) {
                     <label class='text-[13px] font-medium text-zinc-400'>{props.label}</label>
                     <Show when={isJwt()}>
                         <button 
+                            data-testid={`toggle-token-structure-${props.label.toLowerCase().replace(/\s+/g, '-')}`}
                             onClick={() => setIsExpanded(!isExpanded())}
                             class="text-[10px] text-zinc-500 hover:text-zinc-300 underline underline-offset-4"
                         >
@@ -75,6 +77,7 @@ function TokenDisplay(props: { token: string | null; label: string }) {
                         when={isExpanded() && isJwt()} 
                         fallback={
                             <div 
+                                data-testid={`token-panel-${props.label.toLowerCase().replace(/\s+/g, '-')}`}
                                 class={`bg-zinc-900 border border-zinc-800 rounded px-3 py-2 transition-colors ${isJwt() ? 'cursor-pointer hover:border-zinc-700' : 'cursor-default'}`}
                                 onClick={() => isJwt() && setIsExpanded(true)}
                             >
@@ -231,6 +234,7 @@ export default function User() {
                     <p class='text-[13px] text-zinc-500 mt-1'>Authenticated as <span class="text-zinc-300 font-mono">{subject()}</span></p>
                 </div>
                 <button
+                    data-testid='user-end-session'
                     class='text-[11px] font-bold text-zinc-500 hover:text-red-400 uppercase tracking-widest transition-colors'
                     onClick={performLogout}
                 >
@@ -265,6 +269,7 @@ export default function User() {
                         <h3 class='text-[11px] font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap'>Security Tokens</h3>
                         <div class="h-[1px] w-full bg-zinc-800/50" />
                         <button
+                            data-testid='user-refresh-tokens'
                             class='text-[10px] font-bold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors whitespace-nowrap'
                             onClick={handleRefresh}
                             disabled={loading()}
@@ -285,6 +290,7 @@ export default function User() {
                         <h3 class='text-[11px] font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap'>Profile Data</h3>
                         <div class="h-[1px] w-full bg-zinc-800/50" />
                         <button
+                            data-testid='user-open-raw-json'
                             class='text-[10px] font-bold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors whitespace-nowrap'
                             onClick={() => setShowRawJson(true)}
                         >
@@ -303,6 +309,7 @@ export default function User() {
                         <div class="flex items-center justify-between">
                             <h4 class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Terminal Request</h4>
                             <button 
+                                data-testid='user-toggle-full-curl'
                                 onClick={() => setShowFullCurl(!showFullCurl())}
                                 class="text-[10px] text-zinc-400 hover:text-zinc-200 underline underline-offset-4"
                             >
@@ -318,6 +325,7 @@ export default function User() {
                                         curl -s -H "Authorization: Bearer {accessToken()?.slice(0, 10)}..." "{getAuthEndpoints().userinfo}"
                                     </code>
                                     <button 
+                                        data-testid='user-copy-curl-command'
                                         onClick={() => {
                                             navigator.clipboard.writeText(curlCommand())
                                             setCurlCopied(true)
@@ -342,7 +350,7 @@ export default function User() {
                     <div class='bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300' onClick={e => e.stopPropagation()}>
                         <div class='p-6 border-b border-zinc-800 flex justify-between items-center'>
                             <h3 class='text-sm font-bold text-zinc-100 uppercase tracking-widest'>Raw Profile JSON</h3>
-                            <button onClick={() => setShowRawJson(false)} class='text-zinc-500 hover:text-zinc-100'>✕</button>
+                            <button data-testid='user-close-raw-json' onClick={() => setShowRawJson(false)} class='text-zinc-500 hover:text-zinc-100'>✕</button>
                         </div>
                         <div class='p-6 overflow-auto font-mono text-[13px] text-zinc-400 leading-relaxed'>
                             <pre>{userinfoJson()}</pre>

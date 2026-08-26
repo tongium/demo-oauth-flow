@@ -97,6 +97,7 @@ export default function Settings() {
                     </div>
                     <div class='flex items-center gap-1'>
                         <a
+                            data-testid='settings-open-github'
                             href='https://github.com/tongium/demo-oauth-flow'
                             class='p-2 text-zinc-500 hover:text-zinc-200 transition-colors'
                             target='_blank'
@@ -107,6 +108,7 @@ export default function Settings() {
                             </svg>
                         </a>
                         <button
+                            data-testid='settings-open-sidebar'
                             onClick={() => setSidebarOpen(true)}
                             class='p-2 text-zinc-500 hover:text-zinc-200 transition-colors'
                             title='Settings'
@@ -131,6 +133,7 @@ export default function Settings() {
 
                 <div class='mt-10 flex gap-2'>
                     <button
+                        data-testid='settings-share-url'
                         class='px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors border border-zinc-700/50'
                         onClick={handleShare}
                         title="Share URL"
@@ -138,6 +141,7 @@ export default function Settings() {
                         Share
                     </button>
                     <button
+                        data-testid='settings-start-login-flow'
                         class='flex-1 py-3.5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-lg shadow-lg transform active:scale-[0.98] transition-all text-sm uppercase tracking-wide'
                         onClick={performLogin}
                     >
@@ -158,7 +162,7 @@ export default function Settings() {
                 <div class='fixed right-0 top-0 bottom-0 w-full max-w-sm bg-zinc-900 shadow-2xl z-50 overflow-y-auto border-l border-zinc-800 animate-in slide-in-from-right duration-300'>
                     <div class='p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 sticky top-0 backdrop-blur-md'>
                         <h2 class='text-lg font-semibold text-zinc-100'>Advanced Settings</h2>
-                        <button onClick={() => setSidebarOpen(false)} class='text-zinc-500 hover:text-zinc-200 transition-colors'>✕</button>
+                        <button data-testid='settings-close-sidebar' onClick={() => setSidebarOpen(false)} class='text-zinc-500 hover:text-zinc-200 transition-colors'>✕</button>
                     </div>
 
                     <div class='p-6 space-y-8 pb-12'>
@@ -180,6 +184,7 @@ export default function Settings() {
 
                         <section class='pt-8 border-t border-zinc-800'>
                             <button
+                                data-testid='settings-reset-defaults'
                                 class='w-full py-2.5 bg-zinc-950 hover:bg-red-950/20 text-zinc-600 hover:text-red-500 border border-zinc-800 hover:border-red-900/50 rounded transition-all text-xs font-bold'
                                 onClick={async () => {
                                     if (confirm('Reset to defaults?')) {
